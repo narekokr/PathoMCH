@@ -59,7 +59,7 @@ class Conf:
             os.makedirs(self.IMG_PATH)
 
         # misc
-        self.PANCAN_NAME_SUFFIX = 'BRCA_UNHEALTHY_SAMPLES'
+        self.PANCAN_NAME_SUFFIX = 'COAD_UNHEALTHY_SAMPLES'
 
     def set_logger(self, folder_path):
         self.LOG = Logger(folder_path)
@@ -83,186 +83,28 @@ class Conf:
 
 
 # presets
-
-class Conf_BRCA(Conf):
+class Conf_COAD(Conf):
     def __init__(self, is_preprocessing=False):
         super().__init__(is_preprocessing)
-        self.TCGA_COHORT_NAME = 'brca'
-        self.CLINICAL_FILEPATH = '../res/clinical_data_brca.csv'
-        self.GCS_PATTERN_PER_SAMPLE = 'gs://patho_al/tfrecords/brca/per_sample/tf_records_zoom_20_labels_dummy_neg_dummy_pos/*tfrecords'
-        self.PANCAN_NAME_SUFFIX = 'BRCA_UNHEALTHY_SAMPLES'
+        self.TCGA_COHORT_NAME = 'coad'
+        self.CLINICAL_FILEPATH = '../res/clinical_data_coadread_tcga.csv'
+        self.GCS_PATTERN_PER_SAMPLE = \
+            '../res/patho_al/tfrecords/coad/per_sample/tf_records_zoom_20_labels_dummy_neg_dummy_pos/*tfrecords'
+        self.PANCAN_NAME_SUFFIX = 'COAD_UNHEALTHY_SAMPLES'
 
-
-class Conf_LUAD(Conf):
+class Conf_COAD_TRAITS_PIGR_extreme(Conf_COAD):
     def __init__(self, is_preprocessing=False):
         super().__init__(is_preprocessing)
-        self.TCGA_COHORT_NAME = 'luad'
-        self.CLINICAL_FILEPATH = '../res/clinical_data_luad.csv'
-        self.GCS_PATTERN_PER_SAMPLE = 'gs://patho_al/tfrecords/luad/per_sample/tf_records_zoom_20_labels_dummy_neg_dummy_pos/*tfrecords'
-        self.PANCAN_NAME_SUFFIX = 'LUAD_UNHEALTHY_SAMPLES'
-
-
-class Conf_BRCA_TRAITS_MKI67_extreme(Conf_BRCA):
-    def __init__(self, is_preprocessing=False):
-        super().__init__(is_preprocessing)
-        self.NAME = 'MKI67_lo_vs_hi'
-        self.CLINICAL_LABEL_COLS = ['MKI67|4288']
+        self.NAME = 'PIGR_lo_vs_hi'
+        self.CLINICAL_LABEL_COLS = ["PIGR|5284"]
         self.LOAD_WEIGHTS_PATH = None  # change when transitioning to inference, e.g.: '../out/<model_name>/auc/'
-        self.GCS_PATTERN = 'gs://patho_al/tfrecords/brca/all_sharded/MKI67_lo_vs_hi/{}*.tfrec'
+        self.GCS_PATTERN = '../res/patho_al/tfrecords/coad/all_sharded/PIGR_lo_vs_hi/{}*.tfrec'
 
-
-class Conf_BRCA_TRAITS_ESR1_extreme(Conf_BRCA):
+class Conf_COAD_TRAITS_miR_143_4p_extreme(Conf_COAD):
     def __init__(self, is_preprocessing=False):
         super().__init__(is_preprocessing)
-        self.NAME = 'ESR1_lo_vs_hi'
-        self.CLINICAL_LABEL_COLS = ['ESR1|2099']
-        self.LOAD_WEIGHTS_PATH = None
-        self.GCS_PATTERN = 'gs://patho_al/tfrecords/brca/all_sharded/ESR1_lo_vs_hi/{}*.tfrec'
-
-
-class Conf_BRCA_TRAITS_EGFR_extreme(Conf_BRCA):
-    def __init__(self, is_preprocessing=False):
-        super().__init__(is_preprocessing)
-        self.NAME = 'EGFR_lo_vs_hi'
-        self.CLINICAL_LABEL_COLS = ['EGFR|1956']
-        self.LOAD_WEIGHTS_PATH = None
-        self.GCS_PATTERN = 'gs://patho_al/tfrecords/brca/all_sharded/EGFR_lo_vs_hi/{}*.tfrec'
-
-
-class Conf_BRCA_TRAITS_FOXA1_extreme(Conf_BRCA):
-    def __init__(self, is_preprocessing=False):
-        super().__init__(is_preprocessing)
-        self.NAME = 'FOXA1_lo_vs_hi'
-        self.CLINICAL_LABEL_COLS = ['FOXA1|3169']
-        self.LOAD_WEIGHTS_PATH = None
-        self.GCS_PATTERN = 'gs://patho_al/tfrecords/brca/all_sharded/FOXA1_lo_vs_hi/{}*.tfrec'
-
-
-class Conf_BRCA_TRAITS_MYC_extreme(Conf_BRCA):
-    def __init__(self, is_preprocessing=False):
-        super().__init__(is_preprocessing)
-        self.NAME = 'MYC_lo_vs_hi'
-        self.CLINICAL_LABEL_COLS = ['MYC|4609']
-        self.LOAD_WEIGHTS_PATH = None
-        self.GCS_PATTERN = 'gs://main_al/tfrecords/brca/all_sharded/MYC_lo_vs_hi/{}*.tfrec'
-
-
-class Conf_BRCA_TRAITS_KRT14_extreme(Conf_BRCA):
-    def __init__(self, is_preprocessing=False):
-        super().__init__(is_preprocessing)
-        self.NAME = 'KRT14_lo_vs_hi'
-        self.CLINICAL_LABEL_COLS = ['KRT14|3861']
-        self.LOAD_WEIGHTS_PATH = None
-        self.GCS_PATTERN = 'gs://main_al/tfrecords/brca/all_sharded/KRT14_lo_vs_hi/{}*.tfrec'
-
-
-class Conf_BRCA_TRAITS_FOXC1_extreme(Conf_BRCA):
-    def __init__(self, is_preprocessing=False):
-        super().__init__(is_preprocessing)
-        self.NAME = 'FOXC1_lo_vs_hi'
-        self.CLINICAL_LABEL_COLS = ['FOXC1|2296']
-        self.LOAD_WEIGHTS_PATH = None
-        self.GCS_PATTERN = 'gs://main_al/tfrecords/brca/all_sharded/FOXC1_lo_vs_hi/{}*.tfrec'
-
-
-class Conf_BRCA_TRAITS_CD24_extreme(Conf_BRCA):
-    def __init__(self, is_preprocessing=False):
-        super().__init__(is_preprocessing)
-        self.NAME = 'CD24_lo_vs_hi'
-        self.CLINICAL_LABEL_COLS = ['CD24|100133941']
-        self.LOAD_WEIGHTS_PATH = None
-        self.GCS_PATTERN = 'gs://main_al/tfrecords/brca/all_sharded/CD24_lo_vs_hi/{}*.tfrec'
-
-
-class Conf_BRCA_TRAITS_ERBB2_extreme(Conf_BRCA):
-    def __init__(self, is_preprocessing=False):
-        super().__init__(is_preprocessing)
-        self.NAME = 'ERBB2_lo_vs_hi'
-        self.CLINICAL_LABEL_COLS = ['ERBB2|2064']
-        self.LOAD_WEIGHTS_PATH = None
-        self.GCS_PATTERN = 'gs://patho_al/tfrecords/brca/all_sharded/ERBB2_lo_vs_hi/{}*.tfrec'
-
-
-class Conf_BRCA_TRAITS_miR_17_5p_extreme(Conf_BRCA):
-    def __init__(self, is_preprocessing=False):
-        super().__init__(is_preprocessing)
-        self.NAME = 'hsa-miR-17-5p_lo_vs_hi'
-        self.CLINICAL_LABEL_COLS = ['hsa-miR-17-5p']
+        self.NAME = 'hsa-miR-143-3p_lo_vs_hi'
+        self.CLINICAL_LABEL_COLS = ['hsa-miR-143-3p']
         # self.LOAD_WEIGHTS_PATH = '../out/hsa-miR-17-5p_lo_vs_hi_zoom_20_round_0_2020_05_22_20_59_43/auc/'
         self.LOAD_WEIGHTS_PATH = None
-        self.GCS_PATTERN = 'gs://main_al/tfrecords/brca/all_sharded/{}/'.format(self.NAME)+'{}*.tfrec'
-
-
-class Conf_BRCA_TRAITS_miR_29a_3p_extreme(Conf_BRCA):
-    def __init__(self, is_preprocessing=False):
-        super().__init__(is_preprocessing)
-        self.NAME = 'hsa-miR-29a-3p_lo_vs_hi'
-        self.CLINICAL_LABEL_COLS = ['hsa-miR-29a-3p']
-        self.LOAD_WEIGHTS_PATH = None
-        self.GCS_PATTERN = 'gs://patho_al/tfrecords/brca/all_sharded/{}/'.format(self.NAME)+'{}*.tfrec'
-
-
-class Conf_LUAD_TRAITS_EGFR_extreme(Conf_LUAD):
-    def __init__(self, is_preprocessing=False):
-        super().__init__(is_preprocessing)
-        self.NAME = 'EGFR_lo_vs_hi'
-        self.CLINICAL_LABEL_COLS = ['EGFR|1956']
-        self.LOAD_WEIGHTS_PATH = None
-        self.GCS_PATTERN = 'gs://patho_al/tfrecords/luad/all_sharded/{}/'.format(self.NAME)+'{}*.tfrec'
-
-
-class Conf_LUAD_TRAITS_KRAS_extreme(Conf_LUAD):
-    def __init__(self, is_preprocessing=False):
-        super().__init__(is_preprocessing)
-        self.NAME = 'KRAS_lo_vs_hi'
-        self.CLINICAL_LABEL_COLS = ['KRAS|3845']
-        self.LOAD_WEIGHTS_PATH = None
-        self.GCS_PATTERN = 'gs://patho_al/tfrecords/luad/all_sharded/{}/'.format(self.NAME)+'{}*.tfrec'
-
-
-class Conf_LUAD_TRAITS_miR_17_5p_extreme(Conf_LUAD):
-    def __init__(self, is_preprocessing=False):
-        super().__init__(is_preprocessing)
-        self.NAME = 'hsa-miR-17-5p_lo_vs_hi'
-        self.CLINICAL_LABEL_COLS = ['hsa-miR-17-5p']
-        self.LOAD_WEIGHTS_PATH = None
-        self.GCS_PATTERN = 'gs://patho_al/tfrecords/luad/all_sharded/{}/'.format(self.NAME)+'{}*.tfrec'
-
-
-class Conf_LUAD_TRAITS_miR_21_5p_extreme(Conf_LUAD):
-    def __init__(self, is_preprocessing=False):
-        super().__init__(is_preprocessing)
-        self.NAME = 'hsa-miR-21-5p_lo_vs_hi'
-        self.CLINICAL_LABEL_COLS = ['hsa-miR-21-5p']
-        self.LOAD_WEIGHTS_PATH = None
-        self.GCS_PATTERN = 'gs://patho_al/tfrecords/luad/all_sharded/{}/'.format(self.NAME)+'{}*.tfrec'
-
-
-class Conf_LUAD_TRAITS_CD274_extreme(Conf_LUAD):
-    def __init__(self, is_preprocessing=False):
-        super().__init__(is_preprocessing)
-        self.NAME = 'CD274_lo_vs_hi'
-        self.CLINICAL_LABEL_COLS = ['CD274|29126']
-        self.LOAD_WEIGHTS_PATH = None
-        self.GCS_PATTERN = 'gs://patho_al/tfrecords/luad/all_sharded/{}/'.format(self.NAME)+'{}*.tfrec'
-
-
-class Conf_LUAD_DUMMY_LABEL(Conf_LUAD):
-    def __init__(self, is_preprocessing=False):
-        super().__init__(is_preprocessing)
-        self.NAME = 'Dummy'
-        self.CLINICAL_LABEL_COLS = ['dummy']
-        self.LOAD_WEIGHTS_PATH = None
-        self.GCS_PATTERN = None
-        self.GCS_PATTERN_PER_SAMPLE = None
-
-
-class Conf_BRCA_DUMMY_LABEL(Conf_BRCA):
-    def __init__(self, is_preprocessing=False):
-        super().__init__(is_preprocessing)
-        self.NAME = 'Dummy'
-        self.CLINICAL_LABEL_COLS = ['dummy']
-        self.LOAD_WEIGHTS_PATH = None
-        self.PATIENT_IDS = None
-        self.GCS_PATTERN_PER_SAMPLE = 'gs://patho_al/tfrecords/brca/per_sample/tf_records_zoom_20_labels_dummy_neg_dummy_pos/*tfrecords'
-
+        self.GCS_PATTERN = '../res/main_al/tfrecords/coad/all_sharded/{}/'.format(self.NAME)+'{}*.tfrec'
