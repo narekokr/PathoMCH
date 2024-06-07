@@ -67,7 +67,7 @@ def deep_zoom_tile(slide_path, output_folder=Conf().IMG_PATH, xZoom=Conf().ZOOM_
                 continue
 
             patch = oslide.read_region((x, y), 0, (pw_x, pw_y))
-            patch = patch.resize((patch_size * pw_x // pw, patch_size * pw_y // pw), Image.ANTIALIAS)
+            patch = patch.resize((patch_size * pw_x // pw, patch_size * pw_y // pw), Image.LANCZOS)
             patch = patch.convert('RGB')
             is_blank, pct_blank = check_img_is_blank(patch)
             if is_blank:

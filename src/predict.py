@@ -5,7 +5,7 @@ from tfrecords_reader import *
 Functionality for predictions per sample. Used by model.py when using training = False.
 '''
 
-tf.enable_eager_execution()
+# tf.enable_eager_execution()
 
 
 class Predict(object):

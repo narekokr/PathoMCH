@@ -30,15 +30,16 @@ class tfrecords():
         else:
             n_class = 1
         features = {
-            'height': tf.FixedLenFeature([], tf.int64),
-            'width': tf.FixedLenFeature([], tf.int64),
-            'depth': tf.FixedLenFeature([], tf.int64),
-            'label': tf.FixedLenFeature([n_class], tf.int64),
-            'image_raw': tf.FixedLenFeature([], tf.string),
-            'image_name':tf.FixedLenFeature([], tf.string),
+            'height': tf.io.FixedLenFeature([], tf.int64),
+            'width': tf.io.FixedLenFeature([], tf.int64),
+            'depth': tf.io.FixedLenFeature([], tf.int64),
+            'label': tf.io.FixedLenFeature([n_class], tf.int64),
+            'image_raw': tf.io.FixedLenFeature([], tf.string),
+            'image_name': tf.io.FixedLenFeature([], tf.string),
         }
+
         # decode the TFRecord
-        example = tf.parse_single_example(example, features)
+        example = tf.io.parse_single_example(example, features)
         image = tf.image.decode_jpeg(example['image_raw'], channels=3)
         image = tf.image.resize(image, (self.c.IMG_SIZE, self.c.IMG_SIZE))
         image = tf.cast(image, tf.float32)

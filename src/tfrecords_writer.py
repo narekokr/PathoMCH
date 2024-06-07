@@ -2,7 +2,7 @@ import math
 from utils import *
 import multiprocessing
 print("Tensorflow version " + tf.__version__)
-tf.enable_eager_execution()
+# tf.enable_eager_execution()
 import glob
 import functools
 import random

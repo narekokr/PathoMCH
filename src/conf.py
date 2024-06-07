@@ -74,7 +74,8 @@ class Conf:
                 os.mkdir(sub_data_path)
 
     def set_local(self):
-        self.LOCAL = True
+        # self.LOCAL = True
+        self.LOCAL = False
         self.GCS_PATTERN = '../res/{}*.tfrec'
         self.GCS_PATTERN_PER_SAMPLE = '../res/all_samples_dummy_labels/*tfrecords'
         print("!!! Using LOCAL settings !!! This means you are not training the full model optimally. To fully"
@@ -187,7 +188,8 @@ class Conf_BRCA_TRAITS_miR_17_5p_extreme(Conf_BRCA):
         super().__init__(is_preprocessing)
         self.NAME = 'hsa-miR-17-5p_lo_vs_hi'
         self.CLINICAL_LABEL_COLS = ['hsa-miR-17-5p']
-        self.LOAD_WEIGHTS_PATH = '../out/hsa-miR-17-5p_lo_vs_hi_zoom_20_round_0_2020_05_22_20_59_43/auc/'
+        # self.LOAD_WEIGHTS_PATH = '../out/hsa-miR-17-5p_lo_vs_hi_zoom_20_round_0_2020_05_22_20_59_43/auc/'
+        self.LOAD_WEIGHTS_PATH = None
         self.GCS_PATTERN = 'gs://main_al/tfrecords/brca/all_sharded/{}/'.format(self.NAME)+'{}*.tfrec'
 
 

@@ -4,9 +4,9 @@ from network_architectures import *
 import os
 from tfrecords_reader import *
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-tf.logging.set_verbosity(tf.logging.ERROR)
+# tf.logging.set_verbosity(tf.logging.ERROR)
 
-from tensorflow.python.keras.utils import multi_gpu_model
+import tensorflow as tf
 
 '''
 Control training and inference from here.
@@ -46,10 +46,12 @@ for f in [model_folder_loss, model_folder_acc, model_folder_auc]:
     if not os.path.exists(f):
         os.mkdir(f)
 
+print(c.GCS_PATTERN)
+# sys.exit()
 if training:
     # get filenames and number of tiles to determine number of steps
-    training_filenames = tf.gfile.Glob(c.GCS_PATTERN.format('train/round_{}_train'.format(resample_round)))
-    validation_filenames = tf.gfile.Glob(c.GCS_PATTERN.format('val/round_{}_val'.format(resample_round)))
+    training_filenames = tf.io.gfile.glob(c.GCS_PATTERN.format('train/round_{}_train'.format(resample_round)))
+    validation_filenames = tf.io.gfile.glob(c.GCS_PATTERN.format('val/round_{}_val'.format(resample_round)))
     print("Training filenames\n", training_filenames)
     print("Val filenames:\n", validation_filenames)
     random.shuffle(training_filenames)
@@ -75,7 +77,8 @@ with strategy.scope():
     # Compile the model
     optimizer = tf.keras.optimizers.Adam(lr=lr)
     lr_metric = get_lr_metric(optimizer)
-    model.compile(optimizer=optimizer, loss=loss, metrics=[main_metric,lr_metric,tf.keras.metrics.AUC()])
+    with strategy.scope():
+        model.compile(optimizer=optimizer, loss=loss, metrics=[main_metric,lr_metric,tf.keras.metrics.AUC()])
     model.summary()
 
     # Train the model

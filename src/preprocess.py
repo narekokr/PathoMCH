@@ -35,7 +35,7 @@ def create_image_path_to_labels_dict_slides(c, n_examples_per_label=-1):
         return label_to_pos
         
     def _get_pregenerated_labels(c):
-        labels_string = c.IM_PATH_TO_LABEL_DICT_FORMAT.format(c.SLIDE_TYPE,'_'.join(c.LABELS))
+        labels_string = c.IM_PATH_TO_LABEL_DICT_FORMAT.format(c.SLIDE_TYPE, '_'.join(c.LABELS))
         if os.path.exists('../res/{}.pkl'.format(labels_string)):
             print('Using EXISTING im_path_to_label_dict at: ../res/{}.pkl'.format(labels_string))
             return load_obj(labels_string)
