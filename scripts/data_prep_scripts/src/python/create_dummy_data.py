@@ -15,8 +15,10 @@ def create_dummy_structure_from_zip(zip_path, output_dir):
                 dir_name = os.path.dirname(extracted_path)
                 os.makedirs(dir_name, exist_ok=True)
 
-                if os.path.basename(zip_info.filename) == "annotations.txt":
-                    # If it's the annotations.txt file, extract it with content
+                # if os.path.basename(zip_info.filename) == "annotations.txt":
+                #     # If it's the annotations.txt file, extract it with content
+                if not os.path.basename(zip_info.filename).endswith(".svs"):
+                    # if it is not a svs file, extract it with content
                     with zip_ref.open(zip_info.filename) as source, open(extracted_path, 'wb') as target:
                         target.write(source.read())
                 else:
@@ -25,6 +27,8 @@ def create_dummy_structure_from_zip(zip_path, output_dir):
                         pass
 
 if __name__ == "__main__":
-    zip_path = '/home/mathias/DSitLS/project/TCGA-COAD/DATA_CONTAINIG_SVS_FILES/files_unsorted.zip'  # Replace with your zip file path
-    output_dir = '/home/mathias/DSitLS/project/TCGA-COAD/dummy_data'  # Replace with the desired output directory
+    zip_path = '/home/mathias/DSitLS/dsitls-project/scripts/data_prep_scripts/TCGA-COAD/bigData/DATA_CONTAINIG_SVS_FILES/files_unsorted.zip'  # Replace with your zip file path
+    output_dir = '/home/mathias/DSitLS/dsitls-project/scripts/data_prep_scripts/TCGA-COAD/dummy_data'  # Replace with
+    # the desired output directory
     create_dummy_structure_from_zip(zip_path, output_dir)
+    print("done")

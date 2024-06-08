@@ -16,7 +16,7 @@ class Conf:
         self.LOAD_WEIGHTS_PATH = None
         self.ONLY_DX1 = False
         self.ZOOM_LEVEL = 20
-        self.NUM_CPU = 60
+        self.NUM_CPU = 1
         self.SAVE_IMAGES = True
         self.RESTORE_FROM_BEST_CKPT = False
         self.APPLY_AUGMENTATIONS = True  # True if for training we want data augmentations. With coco was beneficial to first train without until plateau. Then load ckpt and retrain with.
@@ -87,7 +87,7 @@ class Conf_COAD(Conf):
     def __init__(self, is_preprocessing=False):
         super().__init__(is_preprocessing)
         self.TCGA_COHORT_NAME = 'coad'
-        self.CLINICAL_FILEPATH = '../res/clinical_data_coadread_tcga.csv'
+        self.CLINICAL_FILEPATH = '../res/coadread_tcga_clinical_data_complete.csv'
         self.GCS_PATTERN_PER_SAMPLE = \
             '../res/patho_al/tfrecords/coad/per_sample/tf_records_zoom_20_labels_dummy_neg_dummy_pos/*tfrecords'
         self.PANCAN_NAME_SUFFIX = 'COAD_UNHEALTHY_SAMPLES'
@@ -104,7 +104,7 @@ class Conf_COAD_TRAITS_miR_143_4p_extreme(Conf_COAD):
     def __init__(self, is_preprocessing=False):
         super().__init__(is_preprocessing)
         self.NAME = 'hsa-miR-143-3p_lo_vs_hi'
-        self.CLINICAL_LABEL_COLS = ['hsa-miR-143-3p']
+        self.CLINICAL_LABEL_COLS = ['hsa-miR-143']
         # self.LOAD_WEIGHTS_PATH = '../out/hsa-miR-17-5p_lo_vs_hi_zoom_20_round_0_2020_05_22_20_59_43/auc/'
         self.LOAD_WEIGHTS_PATH = None
         self.GCS_PATTERN = '../res/main_al/tfrecords/coad/all_sharded/{}/'.format(self.NAME)+'{}*.tfrec'

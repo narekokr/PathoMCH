@@ -457,8 +457,9 @@ if __name__ == '__main__':
     # first use gdc-client to obtain slides with hith manifest:  # TODO
     # ./gdc-client download -m gdc_manifest_20190507_125211.txt
 
-    c = Conf_BRCA_TRAITS_miR_17_5p_extreme()
-    # c = Conf_BRCA_DUMMY_LABEL()  # used to generate a tfrecord per sample for post-training predictions
+
+    c = Conf_COAD_TRAITS_miR_143_4p_extreme()
+    # c = Conf_COAD_DUMMY_LABEL()  # used to generate a tfrecord per sample for post-training predictions
 
     cleanup = True  # True if you're ready to move on to a new trait and don't want and tfrec / tfrecords etc. left.
     remove_patient_ids_master_split = False  # False will use ..patient_ids..pkl found under res to split.
