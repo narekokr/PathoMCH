@@ -4,3 +4,6 @@ out
 test-data
 myvenv
 *lock*
+*.zip
+bigData
+dummy_data
