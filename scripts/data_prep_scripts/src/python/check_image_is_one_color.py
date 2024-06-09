@@ -30,7 +30,3 @@ def check_img_is_mainly_one_color(image_path, variance_threshold=0.02):
         #     f"The image is not mainly one color. The most common color is {most_common_color} with
         #     {percentage_variance * 100:.2f}% similarity.")
         return False
-
-
-img_path= "/home/mathias/DSitLS/mainly_one_color_image"
-check_img_is_mainly_one_color(img_path)
