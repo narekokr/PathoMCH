@@ -1,9 +1,4 @@
-
-
-import numpy as np
 import openslide
-import os
-from PIL import Image
 from conf import Conf
 from utils import *
 from scripts.data_prep_scripts.src.python.check_image_is_one_color import check_img_is_mainly_one_color

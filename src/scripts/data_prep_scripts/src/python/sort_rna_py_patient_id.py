@@ -2,11 +2,11 @@ import os
 import pandas as pd
 import shutil
 
-file_path = '../../../../gdc_sample_sheet.2024-06-08.tsv'
+file_path = '../../../../../gdc_sample_sheet.2024-06-08.tsv'
 data = pd.read_csv(file_path, sep='\t')
 print(data.columns)
-source_dir = '../../../../gdc-data'  # Update this path
-target_dir = '../../../../rna'  # Update this path
+source_dir = '../../../../../gdc-data'  # Update this path
+target_dir = '../../../../../rna'  # Update this path
 
 os.makedirs(target_dir, exist_ok=True)
 

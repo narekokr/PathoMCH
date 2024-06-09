@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 
-source_dir = '../../../../rna'  # Update this path
+source_dir = '../../../../../rna'  # Update this path
 target_csv = '../compiled_mirnas_quantification.csv'  # Update this path
 
 compiled_data = {}
