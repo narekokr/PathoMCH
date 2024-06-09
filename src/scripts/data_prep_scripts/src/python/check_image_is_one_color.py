@@ -7,7 +7,7 @@ def check_img_is_mainly_one_color(image_path, variance_threshold=0.02):
     img_array = np.array(image_path)
 
     # Flatten the image array to a 2D array where each row is an RGB value
-    pixels = image_path.reshape(-1, 3)
+    pixels = img_array.reshape(-1, 3)
 
     # Calculate the mean color
     mean_color = np.mean(pixels, axis=0)
