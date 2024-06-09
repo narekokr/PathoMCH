@@ -74,7 +74,7 @@ class tfrecords_writer():
         return tf.train.Example(features=tf.train.Features(feature=feature))
     
     def save_tfrecords(self, sub_data_items, tfrecords_name):
-        with tf.python_io.TFRecordWriter(tfrecords_name) as writer:
+        with tf.io.TFRecordWriter(tfrecords_name) as writer:
             for filepath, label in sub_data_items:
                 image = self._decode_image(filepath)
                 image = self.resize_and_crop_image(image)
@@ -86,7 +86,7 @@ class tfrecords_writer():
                 # for line in str(image_example(image_string, label, filename)).split('\n')[:15]:
                 #     print(line)
                 # print('...')
-    
+
     def create_single_tfrecord_shard(self, shard_id, shard_id_to_shard_filenames, im_path_to_label_dict,
                                      sub_data_name, resample_round):
         shard_items = []
