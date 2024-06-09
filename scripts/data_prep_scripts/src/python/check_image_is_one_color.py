@@ -4,31 +4,25 @@ from collections import Counter
 
 
 def check_img_is_mainly_one_color(image_path, variance_threshold=0.02):
-    # Open the image and convert it to RGB
-    img = Image.open(image_path).convert('RGB')
     img_array = np.array(img)
 
-    # Reshape the image array to a list of RGB tuples
+    # Flatten the image array to a 2D array where each row is an RGB value
     pixels = img_array.reshape(-1, 3)
 
-    # Count the occurrences of each color
-    pixel_counts = Counter(map(tuple, pixels))
+    # Calculate the mean color
+    mean_color = np.mean(pixels, axis=0)
 
-    # Find the most common color
-    most_common_color, most_common_count = pixel_counts.most_common(1)[0]
+    # Calculate the distance of each pixel to the mean color
+    color_distances = np.linalg.norm(pixels - mean_color, axis=1)
 
-    # Calculate the percentage of pixels that match the most common color within the variance
+    # Count the number of pixels within the allowed variance
+    within_variance = np.sum(color_distances <= 255 * variance_threshold)
+
+    # Calculate the percentage of pixels within the variance
     total_pixels = pixels.shape[0]
-    variance_count = 0
-
-    for color, count in pixel_counts.items():
-        if np.all(np.abs(np.array(color) - np.array(most_common_color)) <= 255 * variance_threshold):
-            variance_count += count
-
-    percentage_variance = variance_count / total_pixels
-
+    percentage_within_variance = within_variance / total_pixels
     # Print the result
-    if percentage_variance >= (1 - variance_threshold):
+    if percentage_within_variance >= (1 - variance_threshold):
         # print(f"The image is mainly one color: {most_common_color} with {percentage_variance * 100:.2f}% similarity.")
         return True
     else:
