@@ -6,13 +6,16 @@ import os
 from PIL import Image
 from conf import Conf
 from utils import *
-
+from scripts.data_prep_scripts.src.python.check_image_is_one_color import check_img_is_mainly_one_color
 
 def check_img_is_blank(img):
     im = np.array(img)
     pct_bkg = np.mean((im > 220) * 1)
     if pct_bkg >= 0.5:
         return True, pct_bkg
+    #addition:
+    if check_img_is_mainly_one_color(img):
+        return True
     return False, pct_bkg
 
 
