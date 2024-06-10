@@ -16,7 +16,7 @@ class Conf:
         self.LOAD_WEIGHTS_PATH = None
         self.ONLY_DX1 = False
         self.ZOOM_LEVEL = 20
-        self.NUM_CPU = 1
+        self.NUM_CPU = 60
         self.SAVE_IMAGES = True
         self.RESTORE_FROM_BEST_CKPT = False
         self.APPLY_AUGMENTATIONS = True  # True if for training we want data augmentations. With coco was beneficial to first train without until plateau. Then load ckpt and retrain with.
