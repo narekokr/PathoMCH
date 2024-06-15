@@ -87,7 +87,7 @@ class Conf_COAD(Conf):
     def __init__(self, is_preprocessing=False):
         super().__init__(is_preprocessing)
         self.TCGA_COHORT_NAME = 'coad'
-        self.CLINICAL_FILEPATH = '../res/coadread_tcga_clinical_data_complete.csv'
+        self.CLINICAL_FILEPATH = '../res/merged_clinical_mirna_data.csv'
         self.GCS_PATTERN_PER_SAMPLE = \
             '../res/patho_al/tfrecords/coad/per_sample/tf_records_zoom_20_labels_dummy_neg_dummy_pos/*tfrecords'
         self.PANCAN_NAME_SUFFIX = 'COAD_UNHEALTHY_SAMPLES'
@@ -104,7 +104,7 @@ class Conf_COAD_TRAITS_miR_143_4p_extreme(Conf_COAD):
     def __init__(self, is_preprocessing=False):
         super().__init__(is_preprocessing)
         self.NAME = 'hsa-miR-143-3p_lo_vs_hi'
-        self.CLINICAL_LABEL_COLS = ['hsa-miR-143']
+        self.CLINICAL_LABEL_COLS = ['hsa-miR-143-3p']
         # self.LOAD_WEIGHTS_PATH = '../out/hsa-miR-17-5p_lo_vs_hi_zoom_20_round_0_2020_05_22_20_59_43/auc/'
         self.LOAD_WEIGHTS_PATH = None
         self.GCS_PATTERN = '../res/main_al/tfrecords/coad/all_sharded/{}/'.format(self.NAME)+'{}*.tfrec'

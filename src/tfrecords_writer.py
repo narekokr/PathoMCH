@@ -37,7 +37,7 @@ class tfrecords_writer():
         self.GCS_OUTPUT = '../res/'
 
     def _decode_image(self, filename):
-      bits = tf.read_file(filename)
+      bits = tf.io.read_file(filename)
       if self.c.IMG_TYPE == 'jpeg':
         image = tf.image.decode_jpeg(bits)
       else:

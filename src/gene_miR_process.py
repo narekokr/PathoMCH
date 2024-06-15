@@ -1,3 +1,5 @@
+import sys
+
 from conf import *
 from utils import *
 
@@ -120,7 +122,7 @@ class PancanSettings:
 
 if __name__ == '__main__':
 
-    c = Conf_BRCA()
+    c = Conf_COAD_TRAITS_miR_143_4p_extreme()
     # c = Conf_LUAD()
 
     clinical_data = pd.read_csv(c.CLINICAL_FILEPATH)
@@ -135,10 +137,7 @@ if __name__ == '__main__':
     # genes = sort_trait_by_highest_var_across_patients(Pancan_Settings, cohort_data_expression_filepath)
 
     # MIRs adding chosen gene labels:
-    if c.TCGA_COHORT_NAME == 'brca':
-        chosen_genes = ['hsa-miR-17-5p', 'hsa-miR-29a-3p']
-    else:
-        chosen_genes = ['hsa-miR-17-5p', 'hsa-miR-21-5p']
+    chosen_genes = ['hsa-miR-143-3p']
 
     for gene in chosen_genes:
         add_expression_top_percentile_bottom_percentile(c, cohort_data_expression_filepath, gene, bottom_percentile=20,
@@ -148,6 +147,7 @@ if __name__ == '__main__':
         add_expression_top_percentile_bottom_percentile(c, cohort_data_expression_filepath, gene,
                                                         col_suffix='_50_pctl_value', bottom_percentile=50)
 
+    sys.exit(0)
     # Genes - finding gene candidates:
     Pancan_Settings = PancanSettings('genes')
     get_cohort_data_from_pan_cancer_data(Pancan_Settings, patients, c.PANCAN_NAME_SUFFIX)
