@@ -46,7 +46,7 @@ class tfrecords_writer():
       return image
 
     def resize_and_crop_image(self, image):
-        image = tf.image.resize_image_with_pad(image, self.c.IMG_SIZE,self.c.IMG_SIZE)
+        image = tf.image.resize_with_pad(image, self.c.IMG_SIZE,self.c.IMG_SIZE)
         return image
 
     def recompress_image(self, image):

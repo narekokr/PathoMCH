@@ -400,7 +400,7 @@ def get_subdata_im_path_to_label_dict(img_path_to_label_dict, chosen_img_paths):
 def create_example_tfrecords(c, resample_round):
 
     from tfrecords_reader import tfrecords
-    tf.enable_eager_execution()
+    # tf.enable_eager_execution()
     files_train = glob.glob('../res/train/*round_{}*train*.tfrec'.format(resample_round))
     random.shuffle(files_train)
     files_val = glob.glob('../res/val/*round_{}*val*.tfrec'.format(resample_round))
@@ -456,6 +456,13 @@ if __name__ == '__main__':
 
     # first use gdc-client to obtain slides with hith manifest:  # TODO
     # ./gdc-client download -m gdc_manifest_20190507_125211.txt
+    gpus = tf.config.experimental.list_physical_devices('GPU')
+    if gpus:
+        try:
+            for gpu in gpus:
+                tf.config.experimental.set_memory_growth(gpu, True)
+        except RuntimeError as e:
+            print(e)
 
 
     c = Conf_COAD_TRAITS_miR_143_4p_extreme()

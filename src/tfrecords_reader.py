@@ -3,7 +3,7 @@ import tensorflow as tf
 import random
 
 AUTO = tf.data.experimental.AUTOTUNE
-tf.compat.v1.enable_eager_execution()
+# tf.compat.v1.enable_eager_execution()
 
 
 class tfrecords():
