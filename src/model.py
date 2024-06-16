@@ -15,7 +15,7 @@ Requires tensorflow 1.14 and python 3 (specifically developed using TensorFlow 1
 
 # Train on multiple GPUs (if not available will default to 1 replica)
 # strategy = tf.distribute.MirroredStrategy(devices=["/gpu:0"])
-strategy = tf.distribute.MirroredStrategy(devices=["/gpu:0", "/gpu:1", "/gpu:2", "/gpu:3"])
+strategy = tf.distribute.MirroredStrategy(devices=["/gpu:0", "/gpu:1"])
 print('Number of devices: {}'.format(strategy.num_replicas_in_sync))
 
 # General settings -- TO BE MODIFIED BY YOU ---
