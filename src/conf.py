@@ -107,4 +107,5 @@ class Conf_COAD_TRAITS_miR_143_4p_extreme(Conf_COAD):
         self.CLINICAL_LABEL_COLS = ['hsa-miR-143-3p']
         # self.LOAD_WEIGHTS_PATH = '../out/hsa-miR-17-5p_lo_vs_hi_zoom_20_round_0_2020_05_22_20_59_43/auc/'
         self.LOAD_WEIGHTS_PATH = None
-        self.GCS_PATTERN = '../res/main_al/tfrecords/coad/all_sharded/{}/'.format(self.NAME)+'{}*.tfrec'
+        # self.GCS_PATTERN = '../res/main_al/tfrecords/coad/all_sharded/{}/'.format(self.NAME)+'{}*.tfrec'
+        self.GCS_PATTERN = 'gs://dsitls-project/train-data/{}*.tfrec'

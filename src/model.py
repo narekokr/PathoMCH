@@ -18,7 +18,7 @@ strategy = tf.distribute.MirroredStrategy()
 print('Number of devices: {}'.format(strategy.num_replicas_in_sync))
 
 # General settings -- TO BE MODIFIED BY YOU ---
-c = Conf_BRCA_TRAITS_miR_17_5p_extreme()
+c = Conf_COAD_TRAITS_miR_143_4p_extreme()
 c.set_local()  # comment this out when you're done debugging locally, and want to train a full model on GPUs.
 training = True  # set to False for predictions
 resample_round = 0  # which of the resampling rounds to use? We had 5 (0,1...,4). Can be replaced by sys.argv[..] to automate using external script
