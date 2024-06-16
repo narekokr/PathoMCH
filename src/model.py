@@ -77,9 +77,9 @@ with strategy.scope():
     # Compile the model
     optimizer = tf.keras.optimizers.Adam(lr=lr)
     lr_metric = get_lr_metric(optimizer)
-    with strategy.scope():
-        model.compile(optimizer=optimizer, loss=loss, metrics=[main_metric,lr_metric,tf.keras.metrics.AUC()])
-    model.summary()
+    # with strategy.scope():
+    model.compile(optimizer=optimizer, loss=loss, metrics=[main_metric,lr_metric,tf.keras.metrics.AUC()])
+    # model.summary()
 
     # Train the model
     global_step = 0
