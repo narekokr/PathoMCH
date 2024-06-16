@@ -19,7 +19,7 @@ print('Number of devices: {}'.format(strategy.num_replicas_in_sync))
 
 # General settings -- TO BE MODIFIED BY YOU ---
 c = Conf_COAD_TRAITS_miR_143_4p_extreme()
-c.set_local()  # comment this out when you're done debugging locally, and want to train a full model on GPUs.
+# c.set_local()  # comment this out when you're done debugging locally, and want to train a full model on GPUs.
 training = True  # set to False for predictions
 resample_round = 0  # which of the resampling rounds to use? We had 5 (0,1...,4). Can be replaced by sys.argv[..] to automate using external script
 print("Resample round {}".format(resample_round))
@@ -95,11 +95,11 @@ with strategy.scope():
         checkpoint_prefix_acc = os.path.join(model_folder_acc, ckpt_prefix + "_{epoch}")
         checkpoint_prefix_auc = os.path.join(model_folder_auc, ckpt_prefix + "_{epoch}")
         STEPS_PER_EPOCH_TRAIN = n_train // (BATCH_SIZE * 16)  # division by batch size due to BATCH_SIZE number of tiles being processed per step. Division by 16 to evaluate every 1/16th epoch to avoid overfitting due to tile similarities between batches (many tiles per slide make it seem like there's a lot of the same per slide)
-        if c.LOCAL:  # TODO: remove
-            print("!!! Using LOCAL settings !!! This means you are not training the full model optimally. To fully"
-                  "train, comment out: 'c.set_local()' in model.py")
-            STEPS_PER_EPOCH_TRAIN = 2
-            STEPS_PER_EPOCH_VAL = 2
+        # if c.LOCAL:  # TODO: remove
+        #     print("!!! Using LOCAL settings !!! This means you are not training the full model optimally. To fully"
+        #           "train, comment out: 'c.set_local()' in model.py")
+        #     STEPS_PER_EPOCH_TRAIN = 2
+        #     STEPS_PER_EPOCH_VAL = 2
         print("steps TRAIN", STEPS_PER_EPOCH_TRAIN)
         print("steps val", STEPS_PER_EPOCH_VAL)
         train_tfrecords = TFRec.get_training_dataset(training_filenames, BATCH_SIZE)
