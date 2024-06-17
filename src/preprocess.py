@@ -469,7 +469,7 @@ if __name__ == '__main__':
     # c = Conf_COAD_DUMMY_LABEL()  # used to generate a tfrecord per sample for post-training predictions
 
     cleanup = True  # True if you're ready to move on to a new trait and don't want and tfrec / tfrecords etc. left.
-    remove_patient_ids_master_split = False  # False will use ..patient_ids..pkl found under res to split.
+    remove_patient_ids_master_split = True  # False will use ..patient_ids..pkl found under res to split.
     tile_slides = False  # turn to False if you no longer want it to tile slides (e.g. new trait, but same slides)
 
     create_img_path_to_labels_dict = True
