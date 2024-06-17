@@ -3,7 +3,7 @@ import pandas as pd
 clinical_data_file = '../../TCGA-COAD/coadread_tcga_clinical_data_incl_survival.tsv'
 clinical_data_df = pd.read_csv(clinical_data_file, sep='\t')
 
-mirna_data_file = '../../../../../compiled_mirnas_quantification.csv'
+mirna_data_file = '../../TCGA-COAD/compiled_mirnas_quantification.csv'
 mirna_data_df = pd.read_csv(mirna_data_file)
 
 
