@@ -1,9 +1,12 @@
+import argparse
+import importlib
+
 from conf import *
 from multiprocessing import Pool
 from functools import partial
 import shutil
 from tfrecords_writer import *
-
+from utils import save_obj
 
 log = Logger('../out/', 'preprocessor')
 
@@ -19,8 +22,9 @@ def create_image_path_to_labels_dict(c, create_image_path_to_labels_fn, n_exampl
     '''
     # should save a pkl file with the following dictionary: {img1_path_full : img1_label, img2_path_full: img2_label..}
     im_path_to_label_dict, labeled_slides = create_image_path_to_labels_fn(c, n_examples_per_label)
-    save_obj(im_path_to_label_dict, c.IM_PATH_TO_LABEL_DICT_FORMAT.format(c.SLIDE_TYPE, '_'.join(c.LABELS)))
-    save_obj(labeled_slides, c.IM_PATH_TO_LABEL_DICT_FORMAT.format(c.SLIDE_TYPE+'_labeled_slides_', '_'.join(c.LABELS)))
+    save_obj(im_path_to_label_dict, c.IM_PATH_TO_LABEL_DICT_FORMAT.format(c.SLIDE_TYPE, '_'.join(c.LABELS)), c=c)
+    save_obj(labeled_slides,
+             c.IM_PATH_TO_LABEL_DICT_FORMAT.format(c.SLIDE_TYPE + '_labeled_slides_', '_'.join(c.LABELS)), c=c)
     return im_path_to_label_dict, labeled_slides
 
 
@@ -33,7 +37,7 @@ def create_image_path_to_labels_dict_slides(c, n_examples_per_label=-1):
         for lix in range(len(c.LABELS)):
             label_to_pos[c.LABELS[lix]] = lix
         return label_to_pos
-        
+
     def _get_pregenerated_labels(c):
         labels_string = c.IM_PATH_TO_LABEL_DICT_FORMAT.format(c.SLIDE_TYPE, '_'.join(c.LABELS))
         if os.path.exists('../res/{}.pkl'.format(labels_string)):
@@ -104,7 +108,7 @@ def create_image_path_to_labels_dict_slides(c, n_examples_per_label=-1):
             for pix in range(len(patients)):
                 patient_to_label_dict[patients[pix]].append(labels[pix])
         patient_to_label_dict = _categories_to_single_bit_labels(c.CLINICAL_LABELS, patient_to_label_dict)
-        save_obj(patient_to_label_dict, "patient_to_label_dict_clinical_debug")
+        save_obj(patient_to_label_dict, "patient_to_label_dict_clinical_debug", c=c)
         return patient_to_label_dict
 
     def _categories_to_single_bit_labels(categories, patient_to_label_dict):
@@ -117,11 +121,11 @@ def create_image_path_to_labels_dict_slides(c, n_examples_per_label=-1):
     im_path_to_label_dict = _get_pregenerated_labels(c)
     if len(im_path_to_label_dict.keys()) > 1 and c.USE_SAVED_LABELS_IF_EXIST:
         print("Found saved label dictionary for: {}. Skipping creating from scratch.".format(c.LABELS))
-        return im_path_to_label_dict # todo - fix with cache
+        return im_path_to_label_dict  # todo - fix with cache
 
     im_path_to_label_dict, labeled_slides = _combine_multiple_labels(c)
 
-    save_obj(im_path_to_label_dict, c.IM_PATH_TO_LABEL_DICT_FORMAT.format(c.SLIDE_TYPE, '_'.join(c.LABELS)))
+    save_obj(im_path_to_label_dict, c.IM_PATH_TO_LABEL_DICT_FORMAT.format(c.SLIDE_TYPE, '_'.join(c.LABELS)), c=c)
     return im_path_to_label_dict, labeled_slides
 
 
@@ -152,7 +156,7 @@ def create_train_val_test_patient_ids(patient_ids, train_pct, val_pct):
         test_patient_ids = patient_ids[:int(n_patients * (1 - train_pct - val_pct))]
         if len(test_patient_ids) == 0:
             log.print_and_log('No test patients!')
-        save_obj(test_patient_ids, 'test_patient_ids')
+        save_obj(test_patient_ids, 'test_patient_ids', c=c)
         test_patient_ids = set(test_patient_ids)
         train_val_patient_ids = [p for p in patient_ids if p not in test_patient_ids]
         n_train_val_patient_ids = len(train_val_patient_ids)
@@ -164,17 +168,18 @@ def create_train_val_test_patient_ids(patient_ids, train_pct, val_pct):
             val_patient_ids = train_val_patient_ids[int(n_train_val_patient_ids * train_pct):]
             assert len([p for p in train_patient_ids if (p in val_patient_ids or p in test_patient_ids)]) == 0
             assert len([p for p in val_patient_ids if p in test_patient_ids]) == 0
-            save_obj(val_patient_ids, 'val_patient_ids_round_{}'.format(resample_round))
-            save_obj(train_patient_ids, 'train_patient_ids_round_{}'.format(resample_round))
+            save_obj(val_patient_ids, 'val_patient_ids_round_{}'.format(resample_round), c=c)
+            save_obj(train_patient_ids, 'train_patient_ids_round_{}'.format(resample_round), c=c)
 
 
-def create_train_val_test_dictionary(c, im_path_to_label_dict, labeled_slides, create_train_val_test_patient_ids_fn, remove_damaged_slides):
+def create_train_val_test_dictionary(c, im_path_to_label_dict, labeled_slides, create_train_val_test_patient_ids_fn,
+                                     remove_damaged_slides):
     '''
     creates a general train val test split of slides.
-    :param c: 
-    :param train_pct: 
-    :param val_pct: 
-    :return: 
+    :param c:
+    :param train_pct:
+    :param val_pct:
+    :return:
     '''
     print("Creating train val test dict")
 
@@ -210,8 +215,8 @@ def create_train_val_test_dictionary(c, im_path_to_label_dict, labeled_slides, c
             val_patient_ids = load_obj('val_patient_ids_round_{}'.format(resample_round))
             train_sample_ids = [s for s in sample_ids if s[:c.N_CHAR_PATIENT_ID] in train_patient_ids]
             val_sample_ids = [s for s in sample_ids if s[:c.N_CHAR_PATIENT_ID] in val_patient_ids]
-            save_obj(train_sample_ids, 'train_sample_ids_{}_round_{}'.format(c.SLIDE_TYPE, resample_round))
-            save_obj(val_sample_ids, 'val_sample_ids_{}_round_{}'.format(c.SLIDE_TYPE, resample_round))
+            save_obj(train_sample_ids, 'train_sample_ids_{}_round_{}'.format(c.SLIDE_TYPE, resample_round), c=c)
+            save_obj(val_sample_ids, 'val_sample_ids_{}_round_{}'.format(c.SLIDE_TYPE, resample_round), c=c)
 
             resample_round_to_train_val_test_split[resample_round] = [train_sample_ids, val_sample_ids, test_sample_ids]
 
@@ -254,21 +259,21 @@ def create_train_val_test_dictionary(c, im_path_to_label_dict, labeled_slides, c
         for sample_id in test_sample_ids:
             img_association_sub_data[sample_id] = 'test'
 
-        img_paths = glob.glob(c.IMG_PATH+'*')
+        img_paths = glob.glob(c.IMG_PATH + '*')
         train_img_paths, val_img_paths, test_img_paths = [], [], []
         for im_path in img_paths:
             slide_id = get_minimal_slide_identifier(im_path)
             if slide_id[:c.N_CHAR_SAMPLE_ID] in img_association_sub_data.keys():
                 if img_association_sub_data[slide_id[:c.N_CHAR_SAMPLE_ID]] == 'train':
-                        train_img_paths.append(im_path)
+                    train_img_paths.append(im_path)
                 elif img_association_sub_data[slide_id[:c.N_CHAR_SAMPLE_ID]] == 'val':
                     val_img_paths.append(im_path)
                 else:
                     test_img_paths.append(im_path)
 
-        save_obj(train_img_paths, 'train_img_paths_{}_round_{}'.format(c.SLIDE_TYPE, resample_round))
-        save_obj(val_img_paths, 'val_img_paths_{}_round_{}'.format(c.SLIDE_TYPE, resample_round))
-    save_obj(test_img_paths, 'test_img_paths_{}'.format(c.SLIDE_TYPE))
+        save_obj(train_img_paths, 'train_img_paths_{}_round_{}'.format(c.SLIDE_TYPE, resample_round), c=c)
+        save_obj(val_img_paths, 'val_img_paths_{}_round_{}'.format(c.SLIDE_TYPE, resample_round), c=c)
+    save_obj(test_img_paths, 'test_img_paths_{}'.format(c.SLIDE_TYPE), c=c)
 
 
 def get_minimal_slide_identifier(slide_string):
@@ -323,22 +328,23 @@ def create_im_path_to_sample_id_multiprocess(c, img_path_to_label_dict):
         for im_path in img_paths:  # path to tile
             sample_id = get_minimal_slide_identifier(im_path)
             _im_path_to_sample_id[im_path] = sample_id
+
     log.print_and_log("running create_im_path_to_sample_id_multiprocess")
     manager = Manager()
     im_path_to_sample_id = manager.dict()
     processes = []
     img_paths = list(img_path_to_label_dict.keys())
-    n_per_cpu = len(img_paths)//c.NUM_CPU
+    n_per_cpu = len(img_paths) // c.NUM_CPU
     if n_per_cpu == 0:
         n_per_cpu = len(img_paths)
     for i in range(0, c.NUM_CPU):
-        if i == c.NUM_CPU -1:
+        if i == c.NUM_CPU - 1:
             processes.append(
                 Process(target=create_im_path_to_sample_id_dict, args=(im_path_to_sample_id, img_paths[i:])))
         else:
             processes.append(
                 Process(target=create_im_path_to_sample_id_dict,
-                        args=(im_path_to_sample_id, img_paths[i*n_per_cpu: (i+1)*n_per_cpu])))
+                        args=(im_path_to_sample_id, img_paths[i * n_per_cpu: (i + 1) * n_per_cpu])))
 
     for p in processes:
         p.start()
@@ -350,11 +356,10 @@ def create_im_path_to_sample_id_multiprocess(c, img_path_to_label_dict):
 
 
 def create_tfrecord_per_sample(c, img_path_to_label_dict, subdata_type):
-
     sample_id_to_img_paths = {}
     tfrecord_paths = []
 
-    im_path_to_sample_id = create_im_path_to_sample_id_multiprocess(c, im_path_to_label_dict)
+    im_path_to_sample_id = create_im_path_to_sample_id_multiprocess(c, img_path_to_label_dict)
     log.print_and_log("Preparing for tfrecords - creating sample_id_to_img_paths dictionary")
     count = 0
     for im_path in img_path_to_label_dict.keys():  # path to tile
@@ -378,7 +383,7 @@ def create_tfrecord_per_sample(c, img_path_to_label_dict, subdata_type):
         tfrecord_paths.append(tfrecords_name)
 
     print(tfrecord_paths)
-    save_obj(tfrecord_paths, 'per_sample_tfrecord_paths_{}'.format(subdata_type), c.ALL_SAMPLES_TFRECORDS_FOLDER)
+    save_obj(tfrecord_paths, 'per_sample_tfrecord_paths_{}'.format(subdata_type), c=c)
     return tfrecord_paths
 
 
@@ -398,7 +403,6 @@ def get_subdata_im_path_to_label_dict(img_path_to_label_dict, chosen_img_paths):
 
 
 def create_example_tfrecords(c, resample_round):
-
     from tfrecords_reader import tfrecords
     # tf.enable_eager_execution()
     files_train = glob.glob('../res/train/*round_{}*train*.tfrec'.format(resample_round))
@@ -414,11 +418,13 @@ def create_example_tfrecords(c, resample_round):
             if img.shape[-1] == 1:
                 # grayscale
                 img = img[:, :, 0]
-            img = Image.fromarray((img*255).astype('uint8'))
+            img = Image.fromarray((img * 255).astype('uint8'))
             label = list(label)
             name = name.decode('utf-8')
             if len(label) == 1:
-                img.save('../out/sample_image_{}_round_{}_label_{}_name_{}'.format(sample_data_name, resample_round, label, name))
+                img.save(
+                    '../out/sample_image_{}_round_{}_label_{}_name_{}'.format(sample_data_name, resample_round, label,
+                                                                              name))
             else:
                 img.save('../out/sample_image_{}_round_{}_unet_name_{}'.format(sample_data_name, resample_round, name))
             count += 1
@@ -428,7 +434,7 @@ def create_example_tfrecords(c, resample_round):
 
 
 def del_train_val_test_img_copies():
-    for p in ['../data/train/','../data/val/', '../data/test/']:
+    for p in ['../data/train/', '../data/val/', '../data/test/']:
         try:
             shutil.rmtree(p)
         except:
@@ -454,21 +460,24 @@ def cleanup_previous_run(remove_patient_ids_master_split):
 
 if __name__ == '__main__':
 
+    parser = argparse.ArgumentParser(description='Process configuration class.')
+    parser.add_argument('--config_class', type=str, default='Conf_COAD_TRAITS_mir_1269a_extreme',
+                        help='Name of the configuration class to use.')
+    args = parser.parse_args()
+
+    # Dynamically import the specified configuration class
+    config_module = importlib.import_module('conf')
+    config_class = getattr(config_module, args.config_class)
+    c = config_class()
+
     # first use gdc-client to obtain slides with hith manifest:  # TODO
     # ./gdc-client download -m gdc_manifest_20190507_125211.txt
-    gpus = tf.config.experimental.list_physical_devices('GPU')
-    if gpus:
-        try:
-            for gpu in gpus:
-                tf.config.experimental.set_memory_growth(gpu, True)
-        except RuntimeError as e:
-            print(e)
-
-
-    c = Conf_COAD_TRAITS_miR_143_4p_extreme()
+    os.makedirs(f'../res/{c.NAME}', exist_ok=True)
+    os.makedirs(f'../res/{c.NAME}/train', exist_ok=True)
+    os.makedirs(f'../res/{c.NAME}/val', exist_ok=True)
     # c = Conf_COAD_DUMMY_LABEL()  # used to generate a tfrecord per sample for post-training predictions
 
-    cleanup = True  # True if you're ready to move on to a new trait and don't want and tfrec / tfrecords etc. left.
+    cleanup = False  # True if you're ready to move on to a new trait and don't want and tfrec / tfrecords etc. left.
     remove_patient_ids_master_split = True  # False will use ..patient_ids..pkl found under res to split.
     tile_slides = False  # turn to False if you no longer want it to tile slides (e.g. new trait, but same slides)
 
@@ -490,11 +499,13 @@ if __name__ == '__main__':
     split_train_val_test_fn = create_train_val_test_patient_ids
 
     if create_img_path_to_labels_dict:
-        im_path_to_label_dict, labeled_slides = create_image_path_to_labels_dict(c, im_path_to_labels_fn, n_examples_per_label=-1)
+        im_path_to_label_dict, labeled_slides = create_image_path_to_labels_dict(c, im_path_to_labels_fn,
+                                                                                 n_examples_per_label=-1)
 
     log.print_and_log("finished im_path_to_label")
 
-    create_train_val_test_dictionary(c, im_path_to_label_dict, labeled_slides, split_train_val_test_fn, remove_damaged_slides=True)
+    create_train_val_test_dictionary(c, im_path_to_label_dict, labeled_slides, split_train_val_test_fn,
+                                     remove_damaged_slides=True)
 
     if create_tf_records_and_labels:
         tfrec_writer = tfrecords_writer(c)
@@ -550,10 +561,3 @@ if __name__ == '__main__':
             im_path_to_label_dict_subdata = get_subdata_im_path_to_label_dict(im_path_to_label_dict, sub_data_filepaths)
             tf_records_paths = create_tfrecord_per_sample(c, im_path_to_label_dict_subdata, sub_data_name)
             log.print_and_log("Finished per sample tfrecords {}".format(sub_data_name))
-
-
-
-
-
-
-

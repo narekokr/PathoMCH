@@ -15,7 +15,7 @@ def get_cohort_data_from_pan_cancer_data(pan_cancer_settings, patient_ids, out_s
         if 'TCGA' not in p:
             continue
         patient_id = p[:12]
-        if patient_id in patient_ids and '-01A-' in p:  # only unhealthy samples (healthy will have >=10 instead of 01)
+        if patient_id in patient_ids and '-01A' in p:  # only unhealthy samples (healthy will have >=10 instead of 01)
             pan_cancer_cols_specific_patients.append(p)
 
     # read all rows but only relevant patient id columns
@@ -52,9 +52,9 @@ def add_expression_top_percentile_bottom_percentile(c, expression_file, gene_id,
     gene_df = pan_cancer_gene_exp_subset[pan_cancer_gene_exp_subset[gene_id_col_name] == gene_id]
     gene_values = gene_df.values[0][1:]
     if bottom_percentile:
-        max_val_negative_class = np.percentile(gene_values, bottom_percentile)
+        max_val_negative_class = np.nanpercentile(gene_values, bottom_percentile)
     if top_percentile:
-        min_val_positive_class = np.percentile(gene_values, top_percentile)
+        min_val_positive_class = np.nanpercentile(gene_values, top_percentile)
     else:
         min_val_positive_class = max_val_negative_class + 1
     clinical = pd.read_csv(c.CLINICAL_FILEPATH)
@@ -107,13 +107,13 @@ class PancanSettings:
     def __init__(self, type):
         self.type = type
         if type == 'genes':
-            self.filepath = '../data/gene_exp_pan_cancer_normalized/EBPlusPlusAdjustPANCAN_IlluminaHiSeq_RNASeqV2.geneExp.tsv'
-            self.col_name = 'gene_id'
-            self.out_subdata_format = '{}.{}.csv'.format(self.filepath.split('.tsv')[0], '{}')
-            self.sep = '\t'
+            self.filepath = '../data/gene_exp_pan_cancer_normalized/compiled_gene_counts.csv'
+            self.col_name = 'gene_name'
+            self.out_subdata_format = '{}.{}.csv'.format(self.filepath.split('.csv')[0], '{}')
+            self.sep = ','
         elif 'mirs' in type:
-            self.filepath = '../data/miRNA/pancanMiRs_EBadjOnProtocolPlatformWithoutRepsWithUnCorrectMiRs_08_04_16.csv'
-            self.col_name = 'Genes'
+            self.filepath = '../data/miRNA/compiled_mirnas_quantification.csv'
+            self.col_name = 'miRNA_ID'
             self.out_subdata_format = '{}.{}.csv'.format(self.filepath.split('.csv')[0], '{}')
             self.sep = ','
         else:
@@ -137,7 +137,7 @@ if __name__ == '__main__':
     # genes = sort_trait_by_highest_var_across_patients(Pancan_Settings, cohort_data_expression_filepath)
 
     # MIRs adding chosen gene labels:
-    chosen_genes = ['hsa-miR-143-3p']
+    chosen_genes = ['hsa-mir-1269a']
 
     for gene in chosen_genes:
         add_expression_top_percentile_bottom_percentile(c, cohort_data_expression_filepath, gene, bottom_percentile=20,
@@ -147,7 +147,6 @@ if __name__ == '__main__':
         add_expression_top_percentile_bottom_percentile(c, cohort_data_expression_filepath, gene,
                                                         col_suffix='_50_pctl_value', bottom_percentile=50)
 
-    sys.exit(0)
     # Genes - finding gene candidates:
     Pancan_Settings = PancanSettings('genes')
     get_cohort_data_from_pan_cancer_data(Pancan_Settings, patients, c.PANCAN_NAME_SUFFIX)
@@ -156,12 +155,7 @@ if __name__ == '__main__':
     # genes = sort_trait_by_highest_var_across_patients(Pancan_Settings, cohort_data_expression_filepath)
 
     # Genes adding chosen gene labels:
-    if c.TCGA_COHORT_NAME == 'brca':
-        chosen_genes = ['MKI67|4288', 'ERBB2|2064', 'CD24|100133941', 'ESR1|2099',
-                        'EGFR|1956', 'FOXA1|3169', 'MYC|4609', 'FOXC1|2296']
-
-    else:
-        chosen_genes = ['EGFR|1956', 'KRAS|3845', 'CD274|29126']
+    chosen_genes = ['XIST', 'RPS4Y1']
 
     for gene in chosen_genes:
         add_expression_top_percentile_bottom_percentile(c, cohort_data_expression_filepath, gene, bottom_percentile=20,

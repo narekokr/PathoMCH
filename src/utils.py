@@ -32,8 +32,12 @@ def get_time_stamp():
     return datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S')
 
 
-def save_obj(obj, name, directory='../res'):
-    with open(directory + '/' + name + '.pkl', 'wb') as f:
+def save_obj(obj, name, directory='../res', c = None):
+    if not c:
+        path = directory + '/' + name + '.pkl'
+    else:
+        path = directory + '/' + c.NAME + '/' + name + '.pkl'
+    with open(path, 'wb') as f:
         pkl.dump(obj, f)
 
 

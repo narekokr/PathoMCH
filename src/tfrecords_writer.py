@@ -34,7 +34,7 @@ class tfrecords_writer():
     def __init__(self, c):
         self.c = c
         self.GCS_PATTERN = '../data/{}/*' + c.IMG_TYPE
-        self.GCS_OUTPUT = '../res/'
+        self.GCS_OUTPUT = f'../res/{c.NAME}/'
 
     def _decode_image(self, filename):
       bits = tf.io.read_file(filename)
