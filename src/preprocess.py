@@ -1,12 +1,16 @@
 import argparse
 import importlib
-
 from conf import *
 from multiprocessing import Pool
 from functools import partial
 import shutil
 from tfrecords_writer import *
-from utils import save_obj
+import os
+import glob
+import random
+from PIL import Image
+from utils import load_obj, save_obj
+
 
 log = Logger('../out/', 'preprocessor')
 
@@ -40,9 +44,9 @@ def create_image_path_to_labels_dict_slides(c, n_examples_per_label=-1):
 
     def _get_pregenerated_labels(c):
         labels_string = c.IM_PATH_TO_LABEL_DICT_FORMAT.format(c.SLIDE_TYPE, '_'.join(c.LABELS))
-        if os.path.exists('../res/{}.pkl'.format(labels_string)):
+        if os.path.exists('../res/{}/{}.pkl'.format(c.NAME, labels_string)):
             print('Using EXISTING im_path_to_label_dict at: ../res/{}.pkl'.format(labels_string))
-            return load_obj(labels_string)
+            return load_obj(labels_string, c=c)
         return {}
 
     def _combine_multiple_labels(c):
@@ -147,7 +151,7 @@ def create_train_val_test_patient_ids(patient_ids, train_pct, val_pct):
     :return:
     '''
     log.print_and_log("Running create_train_val_test_patient_ids")
-    if os.path.exists('../res/train_patient_ids_round_0.pkl'):
+    if os.path.exists(f'../res/{c.NAME}/train_patient_ids_round_0.pkl'):
         log.print_and_log("Already split patients into train, val, test. Using existing split.")
     else:
         log.print_and_log("No pre-split into train, val, test found!!! Splitting from scratch!")
@@ -206,13 +210,13 @@ def create_train_val_test_dictionary(c, im_path_to_label_dict, labeled_slides, c
 
         log.print_and_log("Loading train/val/test patient ids.")
 
-        test_patient_ids = load_obj('test_patient_ids')
+        test_patient_ids = load_obj('test_patient_ids', c=c)
         test_sample_ids = [s for s in sample_ids if s[:c.N_CHAR_PATIENT_ID] in test_patient_ids]
 
         # train val per resampling round
         for resample_round in range(c.N_ROUNDS):
-            train_patient_ids = load_obj('train_patient_ids_round_{}'.format(resample_round))
-            val_patient_ids = load_obj('val_patient_ids_round_{}'.format(resample_round))
+            train_patient_ids = load_obj('train_patient_ids_round_{}'.format(resample_round), c=c)
+            val_patient_ids = load_obj('val_patient_ids_round_{}'.format(resample_round), c=c)
             train_sample_ids = [s for s in sample_ids if s[:c.N_CHAR_PATIENT_ID] in train_patient_ids]
             val_sample_ids = [s for s in sample_ids if s[:c.N_CHAR_PATIENT_ID] in val_patient_ids]
             save_obj(train_sample_ids, 'train_sample_ids_{}_round_{}'.format(c.SLIDE_TYPE, resample_round), c=c)
@@ -222,7 +226,7 @@ def create_train_val_test_dictionary(c, im_path_to_label_dict, labeled_slides, c
 
         return resample_round_to_train_val_test_split
 
-    if os.path.exists('../res/test_img_paths_{}.pkl'.format(c.SLIDE_TYPE)):
+    if os.path.exists('../res/{}/test_img_paths_{}.pkl'.format(c.NAME, c.SLIDE_TYPE)):
         log.print_and_log("Already split image paths into general train, val, test sets.")
         return
 
@@ -514,9 +518,9 @@ if __name__ == '__main__':
         for resample_round in range(c.N_ROUNDS):
             print("round", resample_round)
 
-            train_img_paths = load_obj('train_img_paths_{}_round_{}'.format(c.SLIDE_TYPE, resample_round))
-            val_img_paths = load_obj('val_img_paths_{}_round_{}'.format(c.SLIDE_TYPE, resample_round))
-            test_img_paths = load_obj('test_img_paths_{}'.format(c.SLIDE_TYPE))
+            train_img_paths = load_obj('train_img_paths_{}_round_{}'.format(c.SLIDE_TYPE, resample_round), c=c)
+            val_img_paths = load_obj('val_img_paths_{}_round_{}'.format(c.SLIDE_TYPE, resample_round), c=c)
+            test_img_paths = load_obj('test_img_paths_{}'.format(c.SLIDE_TYPE), c=c)
 
             for (sub_data_filepaths, sub_data_name) in \
                     [(train_img_paths, "train"), (val_img_paths, "val")]:
@@ -553,9 +557,9 @@ if __name__ == '__main__':
     if create_per_sample_tf_records:
         tfrec_writer = tfrecords_writer(c)
         # load paths from any round (per sample is round agnostic)
-        train_img_paths = load_obj('train_img_paths_{}_round_{}'.format(c.SLIDE_TYPE, 0))
-        val_img_paths = load_obj('val_img_paths_{}_round_{}'.format(c.SLIDE_TYPE, 0))
-        test_img_paths = load_obj('test_img_paths_{}'.format(c.SLIDE_TYPE))
+        train_img_paths = load_obj('train_img_paths_{}_round_{}'.format(c.SLIDE_TYPE, 0), c=c)
+        val_img_paths = load_obj('val_img_paths_{}_round_{}'.format(c.SLIDE_TYPE, 0), c=c)
+        test_img_paths = load_obj('test_img_paths_{}'.format(c.SLIDE_TYPE), c=c)
         for (sub_data_filepaths, sub_data_name) in \
                 [(train_img_paths, "train"), (val_img_paths, "val"), (test_img_paths, "test")]:
             im_path_to_label_dict_subdata = get_subdata_im_path_to_label_dict(im_path_to_label_dict, sub_data_filepaths)

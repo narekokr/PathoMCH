@@ -41,8 +41,12 @@ def save_obj(obj, name, directory='../res', c = None):
         pkl.dump(obj, f)
 
 
-def load_obj(name, directory='../res/'):
-    with open(directory + name + '.pkl', 'rb') as f:
+def load_obj(name, directory='../res', c=None):
+    if not c:
+        path = directory + '/' + name + '.pkl'
+    else:
+        path = directory + '/' + c.NAME + '/' + name + '.pkl'
+    with open(path, 'rb') as f:
         return pkl.load(f)
 
 
