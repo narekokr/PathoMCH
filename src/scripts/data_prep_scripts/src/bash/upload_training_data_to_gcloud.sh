@@ -20,7 +20,6 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-exit 1
 # Upload the folder to the specified GCS bucket
 gsutil -m cp -r res/$FOLDER_NAME gs://dsitls-project/data/$FOLDER_NAME
 
