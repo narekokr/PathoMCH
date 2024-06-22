@@ -117,7 +117,7 @@ class Conf_COAD_TRAITS_mir_1269a_extreme(Conf_COAD):
         self.CLINICAL_LABEL_COLS = ['hsa-mir-1269a']
         self.LOAD_WEIGHTS_PATH = None
         self.GCS_PATTERN = 'gs://dsitls-project/data/{}{{}}*.tfrec'.format(self.NAME)
-        self.GCS_PATTERN_LOCAL = '../res/{}{{}}*.tfrec'.format(self.NAME)
+        self.GCS_PATTERN_LOCAL = '../res/{}/{{}}*.tfrec'.format(self.NAME)
 
 class Conf_COAD_TRAITS_XIST_extreme(Conf_COAD):
     def __init__(self, is_preprocessing=False):
@@ -126,7 +126,7 @@ class Conf_COAD_TRAITS_XIST_extreme(Conf_COAD):
         self.CLINICAL_LABEL_COLS = ['XIST']
         self.LOAD_WEIGHTS_PATH = None
         self.GCS_PATTERN = 'gs://dsitls-project/data/{}{{}}*.tfrec'.format(self.NAME)
-        self.GCS_PATTERN_LOCAL = '../res/{}{{}}*.tfrec'.format(self.NAME)
+        self.GCS_PATTERN_LOCAL = '../res/{}/{{}}*.tfrec'.format(self.NAME)
 
 class Conf_COAD_TRAITS_RPS4Y1_extreme(Conf_COAD):
     def __init__(self, is_preprocessing=False):
@@ -135,4 +135,4 @@ class Conf_COAD_TRAITS_RPS4Y1_extreme(Conf_COAD):
         self.CLINICAL_LABEL_COLS = ['RPS4Y1']
         self.LOAD_WEIGHTS_PATH = None
         self.GCS_PATTERN = 'gs://dsitls-project/data/{}{{}}*.tfrec'.format(self.NAME)
-        self.GCS_PATTERN_LOCAL = '../res/{}{{}}*.tfrec'.format(self.NAME)
+        self.GCS_PATTERN_LOCAL = '../res/{}/{{}}*.tfrec'.format(self.NAME)
