@@ -20,16 +20,18 @@ export XLA_FLAGS="--xla_gpu_cuda_data_dir=$CUDA_DIR"
 # Define the default parameters
 CONFIG_CLASS="Conf_COAD_TRAITS_mir_1269a_extreme"
 RESAMPLE_ROUND=0
+USE_LOCAL_DATA=true
 
 # Parse command-line arguments for custom parameters
 while [[ "$#" -gt 0 ]]; do
     case $1 in
         --config_class) CONFIG_CLASS="$2"; shift ;;
         --resample_round) RESAMPLE_ROUND="$2"; shift ;;
+        --use_local_data) USE_LOCAL_DATA="$2"; shift ;;
         *) echo "Unknown parameter passed: $1"; exit 1 ;;
     esac
     shift
 done
 
 # Run the model.py script with the specified parameters
-python model.py --config_class "$CONFIG_CLASS" --resample_round "$RESAMPLE_ROUND"
+python model.py --config_class "$CONFIG_CLASS" --resample_round "$RESAMPLE_ROUND" --use_local_data "$USE_LOCAL_DATA"

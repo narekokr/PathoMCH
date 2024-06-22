@@ -26,6 +26,8 @@ parser.add_argument('--config_class', type=str, default='Conf_COAD_TRAITS_mir_12
                     help='Name of the configuration class to use.')
 parser.add_argument('--resample_round', type=int, default=0,
                     help='Resample round to use (default: 0).')
+parser.add_argument('--use_local_data', type=bool, default=True,
+                    help='Whether to use local data (default: True).')
 args = parser.parse_args()
 
 # Dynamically import the specified configuration class
@@ -36,6 +38,7 @@ c = config_class()
 # General settings
 training = True  # set to False for predictions
 resample_round = args.resample_round  # which of the resampling rounds to use
+use_local_data = args.use_local_data  # whether to use local data
 print("Resample round {}".format(resample_round))
 
 # Training settings
@@ -64,6 +67,8 @@ print(c.GCS_PATTERN)
 # sys.exit()
 if training:
     # get filenames and number of tiles to determine number of steps
+    if use_local_data:
+        c.GCS_PATTERN = c.GCS_PATTERN_LOCAL
     training_filenames = tf.io.gfile.glob(c.GCS_PATTERN.format('train/round_{}_train'.format(resample_round)))
     validation_filenames = tf.io.gfile.glob(c.GCS_PATTERN.format('val/round_{}_val'.format(resample_round)))
     print("Training filenames\n", training_filenames)
