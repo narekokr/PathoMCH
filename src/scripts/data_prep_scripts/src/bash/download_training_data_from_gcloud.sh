@@ -21,6 +21,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # Upload the folder to the specified GCS bucket
+mkdir -p res/$FOLDER_NAME
 gsutil -m cp -r gs://dsitls-project/data/$FOLDER_NAME res/$FOLDER_NAME
 
 # Check if the upload was successful
