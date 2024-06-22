@@ -409,9 +409,9 @@ def get_subdata_im_path_to_label_dict(img_path_to_label_dict, chosen_img_paths):
 def create_example_tfrecords(c, resample_round):
     from tfrecords_reader import tfrecords
     # tf.enable_eager_execution()
-    files_train = glob.glob(f'../res/{c.NAME}train/*round_{{}}*train*.tfrec'.format(resample_round))
+    files_train = glob.glob(f'../res/{c.NAME}/train/*round_{{}}*train*.tfrec'.format(resample_round))
     random.shuffle(files_train)
-    files_val = glob.glob(f'../res/{c.NAME}val/*round_{{}}*val*.tfrec'.format(resample_round))
+    files_val = glob.glob(f'../res/{c.NAME}/val/*round_{{}}*val*.tfrec'.format(resample_round))
     random.shuffle(files_val)
     sample_file_train, sample_file_val = files_train[0], files_val[0]
     for sample_data, sample_data_name in [(sample_file_train, 'train'), (sample_file_val, 'val')]:
