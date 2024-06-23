@@ -136,3 +136,21 @@ class Conf_COAD_TRAITS_RPS4Y1_extreme(Conf_COAD):
         self.LOAD_WEIGHTS_PATH = None
         self.GCS_PATTERN = 'gs://dsitls-project/data/{}{{}}*.tfrec'.format(self.NAME)
         self.GCS_PATTERN_LOCAL = '../res/{}/{{}}*.tfrec'.format(self.NAME)
+
+class Conf_COAD_TRAITS_mir_1247_extreme(Conf_COAD):
+    def __init__(self, is_preprocessing=False):
+        super().__init__(is_preprocessing)
+        self.NAME = 'hsa_mir_1247_lo_vs_hi'
+        self.CLINICAL_LABEL_COLS = ['hsa-mir-1247']
+        self.LOAD_WEIGHTS_PATH = None
+        self.GCS_PATTERN = 'gs://dsitls-project/data/{}{{}}*.tfrec'.format(self.NAME)
+        self.GCS_PATTERN_LOCAL = '../res/{}/{{}}*.tfrec'.format(self.NAME)
+
+class Conf_COAD_TRAITS_mir_17_extreme(Conf_COAD):
+    def __init__(self, is_preprocessing=False):
+        super().__init__(is_preprocessing)
+        self.NAME = 'hsa_mir_17_lo_vs_hi'
+        self.CLINICAL_LABEL_COLS = ['hsa-mir-17']
+        self.LOAD_WEIGHTS_PATH = None
+        self.GCS_PATTERN = 'gs://dsitls-project/data/{}{{}}*.tfrec'.format(self.NAME)
+        self.GCS_PATTERN_LOCAL = '../res/{}/{{}}*.tfrec'.format(self.NAME)
