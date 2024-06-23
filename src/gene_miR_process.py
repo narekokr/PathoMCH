@@ -137,7 +137,7 @@ if __name__ == '__main__':
     # genes = sort_trait_by_highest_var_across_patients(Pancan_Settings, cohort_data_expression_filepath)
 
     # MIRs adding chosen gene labels:
-    chosen_genes = ['hsa-mir-1269a']
+    chosen_genes = ['hsa-mir-1247', 'hsa-mir-17']
 
     for gene in chosen_genes:
         add_expression_top_percentile_bottom_percentile(c, cohort_data_expression_filepath, gene, bottom_percentile=20,
@@ -153,7 +153,7 @@ if __name__ == '__main__':
     cohort_data_expression_filepath = Pancan_Settings.out_subdata_format.format(c.PANCAN_NAME_SUFFIX)
     # EXPLORE:
     # genes = sort_trait_by_highest_var_across_patients(Pancan_Settings, cohort_data_expression_filepath)
-
+    sys.exit(0)
     # Genes adding chosen gene labels:
     chosen_genes = ['XIST', 'RPS4Y1']
 
