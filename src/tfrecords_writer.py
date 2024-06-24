@@ -1,6 +1,8 @@
 import math
 from utils import *
 import multiprocessing
+import tensorflow as tf
+
 print("Tensorflow version " + tf.__version__)
 # tf.enable_eager_execution()
 import glob
