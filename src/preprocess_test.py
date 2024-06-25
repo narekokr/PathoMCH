@@ -322,7 +322,7 @@ def create_sample_tfrecord_multiprocess(sample_id_to_img_paths, sample_id):
     for img_path in sample_id_to_img_paths[sample_id].keys():
         sample_items.append((img_path, sample_id_to_img_paths[sample_id][img_path]))
     tfrecords_name = c.ALL_SAMPLES_TFRECORDS_FOLDER + "{}.tfrecords".format(sample_id)
-    # tfrec_writer.save_tfrecords(sample_items, tfrecords_name)
+    tfrec_writer.save_tfrecords(sample_items, tfrecords_name)
 
 
 def create_im_path_to_sample_id_multiprocess(c, img_path_to_label_dict):
