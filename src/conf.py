@@ -166,5 +166,5 @@ class Conf_COAD_DUMMY_LABEL(Conf_COAD):
         self.GCS_PATTERN_LOCAL = '../res/{}/{{}}*.tfrec'.format(self.NAME)
         self.GCS_PATTERN_PER_SAMPLE = '../res/all_samples_dummy_labels/*tfrecords'
         self.CLINICAL_FILEPATH = '../res/merged_clinical_mirna_data_test.csv'
-        self.NUM_CPU = 12
+        self.NUM_CPU = 4
         self.LOCAL = False
