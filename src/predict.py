@@ -100,7 +100,7 @@ def get_per_sample_tfrecords(c, sample_tfrecord_paths):
 
 
 def predict_per_sample(c, conf_architecture, weights_path, model_architecture, out_folder_suffix=''):
-    tfrecords_per_sample = get_per_sample_tfrecords(c, tf.io.gfile.Glob(c.GCS_PATTERN_PER_SAMPLE))
+    tfrecords_per_sample = get_per_sample_tfrecords(c, tf.io.gfile.glob(c.GCS_PATTERN_PER_SAMPLE))
 
     out_folder = '../out/predict/{}/'.format(c.NAME + out_folder_suffix)
     if not os.path.exists(out_folder):
