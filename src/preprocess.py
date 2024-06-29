@@ -151,7 +151,7 @@ def create_train_val_test_patient_ids(patient_ids, train_pct, val_pct):
     :return:
     '''
     log.print_and_log("Running create_train_val_test_patient_ids")
-    if os.path.exists(f'../res/{c.NAME}/train_patient_ids_round_0.pkl'):
+    if os.path.exists(f'../res/train_patient_ids_round_0.pkl'):
         log.print_and_log("Already split patients into train, val, test. Using existing split.")
     else:
         log.print_and_log("No pre-split into train, val, test found!!! Splitting from scratch!")
@@ -160,7 +160,7 @@ def create_train_val_test_patient_ids(patient_ids, train_pct, val_pct):
         test_patient_ids = patient_ids[:int(n_patients * (1 - train_pct - val_pct))]
         if len(test_patient_ids) == 0:
             log.print_and_log('No test patients!')
-        save_obj(test_patient_ids, 'test_patient_ids', c=c)
+        save_obj(test_patient_ids, 'test_patient_ids')
         test_patient_ids = set(test_patient_ids)
         train_val_patient_ids = [p for p in patient_ids if p not in test_patient_ids]
         n_train_val_patient_ids = len(train_val_patient_ids)
@@ -210,7 +210,7 @@ def create_train_val_test_dictionary(c, im_path_to_label_dict, labeled_slides, c
 
         log.print_and_log("Loading train/val/test patient ids.")
 
-        test_patient_ids = load_obj('test_patient_ids', c=c)
+        test_patient_ids = load_obj('test_patient_ids')
         test_sample_ids = [s for s in sample_ids if s[:c.N_CHAR_PATIENT_ID] in test_patient_ids]
 
         # train val per resampling round
@@ -482,7 +482,7 @@ if __name__ == '__main__':
     # c = Conf_COAD_DUMMY_LABEL()  # used to generate a tfrecord per sample for post-training predictions
 
     cleanup = False  # True if you're ready to move on to a new trait and don't want and tfrec / tfrecords etc. left.
-    remove_patient_ids_master_split = True  # False will use ..patient_ids..pkl found under res to split.
+    remove_patient_ids_master_split = False  # False will use ..patient_ids..pkl found under res to split.
     tile_slides = False  # turn to False if you no longer want it to tile slides (e.g. new trait, but same slides)
 
     create_img_path_to_labels_dict = True
