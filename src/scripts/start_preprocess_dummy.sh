@@ -3,7 +3,7 @@
 # Default sbatch parameters
 SBATCH_JOB_NAME="train_model"
 SBATCH_PARTITION="gpu"
-SBATCH_GPUS=4
+SBATCH_GPUS="gpu:4"
 SBATCH_NTASKS=1
 SBATCH_TIME="2-00:00:00"
 SBATCH_MEM=16000
@@ -36,7 +36,7 @@ done
 sbatch_script="#!/bin/bash
 #SBATCH --job-name=${SBATCH_JOB_NAME}       # Job name
 #SBATCH --partition=${SBATCH_PARTITION}     # Partition to use
-#SBATCH --gres=gpu:${SBATCH_GPUS}           # Request GPUs
+#SBATCH --gres=${SBATCH_GPUS}           # Request GPUs
 #SBATCH --ntasks=${SBATCH_NTASKS}           # Request tasks
 #SBATCH --time=${SBATCH_TIME}               # Time limit
 #SBATCH --mem=${SBATCH_MEM}                 # Memory request
