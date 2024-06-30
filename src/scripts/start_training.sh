@@ -8,6 +8,9 @@ SBATCH_NTASKS=1
 SBATCH_TIME="2-00:00:00"
 SBATCH_MEM=16000
 SBATCH_QOS="prio"
+CONFIG_CLASS="Conf_COAD_TRAITS_mir_1269a_extreme"
+RESAMPLE_ROUND=0
+USE_LOCAL_DATA=true
 
 # Parse sbatch parameters from command-line arguments
 while [[ "$#" -gt 0 ]]; do
