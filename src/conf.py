@@ -16,7 +16,7 @@ class Conf:
         self.LOAD_WEIGHTS_PATH = None
         self.ONLY_DX1 = False
         self.ZOOM_LEVEL = 20
-        self.NUM_CPU = 2
+        self.NUM_CPU = 4
         self.SAVE_IMAGES = True
         self.RESTORE_FROM_BEST_CKPT = False
         self.APPLY_AUGMENTATIONS = True  # True if for training we want data augmentations. With coco was beneficial to first train without until plateau. Then load ckpt and retrain with.
@@ -161,7 +161,7 @@ class Conf_COAD_DUMMY_LABEL(Conf_COAD):
         self.NAME = 'hsa_mir_1269a_lo_vs_hi'
         self.DUMMY = True
         self.CLINICAL_LABEL_COLS = ['Dummy_17']
-        self.LOAD_WEIGHTS_PATH = '../out/hsa_mir_1269a_lo_vs_hi_zoom_20_round_0_2024_06_22_23_20_13/auc'
+        self.LOAD_WEIGHTS_PATH = '../out/hsa_mir_1269a_lo_vs_hi_zoom_20_round_0_2024_06_30_14_38_54/auc'
         self.GCS_PATTERN = 'gs://dsitls-project/data/{}{{}}*.tfrec'.format(self.NAME)
         self.GCS_PATTERN_LOCAL = '../res/{}/{{}}*.tfrec'.format(self.NAME)
         self.GCS_PATTERN_PER_SAMPLE = '../res/all_samples_dummy_labels/*tfrecords'

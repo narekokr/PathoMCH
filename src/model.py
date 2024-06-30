@@ -36,7 +36,7 @@ config_class = getattr(config_module, args.config_class)
 c = config_class()
 
 # General settings
-training = True  # set to False for predictions
+training = False  # set to False for predictions
 resample_round = args.resample_round  # which of the resampling rounds to use
 use_local_data = args.use_local_data  # whether to use local data
 print("Resample round {}".format(resample_round))
@@ -94,7 +94,7 @@ with strategy.scope():
     acc_val_metric = 'val_binary_accuracy'
 
     # Compile the model
-    optimizer = tf.keras.optimizers.Adam(lr=lr)
+    optimizer = tf.keras.optimizers.Adam(learning_rate=lr)
     lr_metric = get_lr_metric(optimizer)
     model.compile(optimizer=optimizer, loss=loss, metrics=[main_metric, lr_metric, tf.keras.metrics.AUC()])
 
