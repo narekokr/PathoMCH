@@ -160,7 +160,7 @@ class Conf_COAD_DUMMY_LABEL(Conf_COAD):
         super().__init__(is_preprocessing)
         self.NAME = 'hsa_mir_1269a_lo_vs_hi'
         self.DUMMY = True
-        self.CLINICAL_LABEL_COLS = ['Dummy']
+        self.CLINICAL_LABEL_COLS = ['Dummy_17']
         self.LOAD_WEIGHTS_PATH = '../out/hsa_mir_1269a_lo_vs_hi_zoom_20_round_0_2024_06_22_23_20_13/auc'
         self.GCS_PATTERN = 'gs://dsitls-project/data/{}{{}}*.tfrec'.format(self.NAME)
         self.GCS_PATTERN_LOCAL = '../res/{}/{{}}*.tfrec'.format(self.NAME)
