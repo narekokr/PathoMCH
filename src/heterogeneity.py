@@ -183,10 +183,12 @@ def KM(confs, conf_postprocess, lo_cutoff=0.5, hi_cutoff=0.5, time_column="Overa
         clinical_data_km = clinical_data_km[~in_between_ix]
 
     simple_trait_names = [c.NAME.split('_')[0] for c in confs]
-    if not is_baseline and confs[0].TCGA_COHORT_NAME == 'brca':
+    if not is_baseline and confs[0].TCGA_COHORT_NAME == 'coad':
         y_label = 'HT-Index for {} and {}'.format(simple_trait_names[0], simple_trait_names[1])
-        plot_score_distribution_per_type(clinical_data_km, conf_postprocess, heterogeneity_score_col, "PAM50", y_label)
-        plot_score_distribution_per_type(clinical_data_km, conf_postprocess, heterogeneity_score_col, 'ER Status By IHC', y_label)
+        plot_score_distribution_per_type(clinical_data_km, conf_postprocess, heterogeneity_score_col,
+                                        "COAD genes", y_label)
+        plot_score_distribution_per_type(clinical_data_km, conf_postprocess, heterogeneity_score_col,
+                                         'ER Status By IHC', y_label)
 
     if use_same_patients_for_baseline_and_heterogeneity:
         clinical_data_km = clinical_data_km.dropna(subset=[time_column, status_column, heterogeneity_score_col ,heterogeneity_score_col_baseline])
@@ -276,7 +278,7 @@ def KM(confs, conf_postprocess, lo_cutoff=0.5, hi_cutoff=0.5, time_column="Overa
 if __name__ == '__main__':
 
     # settings
-    confs = [Conf_BRCA_TRAITS_MKI67_extreme(), Conf_BRCA_TRAITS_miR_17_5p_extreme()]
+    confs = [Conf_COAD_TRAITS_XIST_extreme()]
     # confs = [Conf_LUAD_TRAITS_KRAS_extreme(), Conf_LUAD_TRAITS_miR_17_5p_extreme()]
 
     is_baseline = False
