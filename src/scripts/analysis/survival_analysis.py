@@ -8,7 +8,7 @@ from difflib import get_close_matches
 import os
 
 
-def prepare_data(file_path, time_col, event_col, hi_list=None, hti_threshold=0.5, split_mode='binary'):
+def prepare_data(file_path, time_col, event_col, hi_list=None, hti_threshold=[0.5], split_mode='binary'):
     # Load the data
     data = pd.read_csv(file_path)
     # Convert the event column to binary (0 for living/censored, 1 for deceased/event occurred)
@@ -30,11 +30,12 @@ def prepare_data(file_path, time_col, event_col, hi_list=None, hti_threshold=0.5
             hetero_index_colnames.append(col)
 
     km_data_collector=[]
+    print("Found heterogeneity indexes in columns:\n", "\n".join(hetero_index_colnames))
     for hetero_index_colname in hetero_index_colnames:
         if hetero_index_colname:
             hi_col = data[hetero_index_colname]
         elif hi_list is not None:
-            # Use the provided HI list
+            print("Use the provided HI list")
             hi_col = pd.Series(hi_list)
             if len(hi_col) != len(data):
                 raise ValueError("Length of HI list does not match the number of rows in the CSV")
@@ -46,24 +47,33 @@ def prepare_data(file_path, time_col, event_col, hi_list=None, hti_threshold=0.5
             hi_col = np.clip(hi_col, 0, 1)
 
         # Add the HI column to the data
-        data['HI'] = hi_col
+        # data['HI'] = hi_col
 
         # Determine the group based on HI thresholds
         if isinstance(hti_threshold, list) and len(hti_threshold) == 2:
+            # two thresholds
             lower, upper = sorted(hti_threshold)
             if split_mode == 'ternary':
-                data['HI Group'] = data['HI'].apply(lambda x: f'HT-Index ≤ {lower}' if x <= lower else
-                (f'{lower} < HT-Index ≤ {upper}' if x <= upper else
-                 f'HT-Index > {upper}'))
+                data['HI Group'] = hi_col.apply(lambda x:
+                                                f'HT-Index ≤ {lower}' if x <= lower
+                                                else
+                                                (f'{lower} < HT-Index ≤ {upper}' if x <= upper
+                                                 else
+                                                 f'HT-Index > {upper}'))
             else:
-                data['HI Group'] = data['HI'].apply(lambda x: f'HT-Index ≤ {lower}' if x <= lower else
-                (f'HT-Index > {upper}' if x > upper else
-                 'Excluded'))
+                data['HI Group'] = hi_col.apply(lambda x:
+                                                f'HT-Index ≤ {lower}' if x <= lower
+                                                else
+                                                (f'HT-Index > {upper}' if x > upper
+                                                 else
+                                                'Excluded'))
                 data = data[data['HI Group'] != 'Excluded']
         else:
-            hti_threshold = hti_threshold[0]
-            data['HI Group'] = data['HI'].apply(lambda x: f'HT-Index ≤ {hti_threshold}'
-            if x <= hti_threshold else f'HT-Index > {hti_threshold}')
+            # one threshold
+            threshold = hti_threshold[0]
+            data['HI Group'] = hi_col.apply(lambda x:
+                                            f'HT-Index ≤ {threshold}' if x <= threshold
+                                            else f'HT-Index >{threshold}')
 
         # Drop rows with missing values in the survival columns
         km_data = data[[time_col, event_col, 'HI Group']].dropna()
@@ -74,12 +84,11 @@ def prepare_data(file_path, time_col, event_col, hi_list=None, hti_threshold=0.5
 
 def plot_kaplan_meier(data, time_col, event_col, group_col, p_value, group_sizes, hti_threshold):
     kmf = KaplanMeierFitter()
-    kmf.new()
 
     # Plot survival curves for each group
     for group in data[group_col].sort_values().unique():
         group_data = data[data[group_col] == group]
-        kmf.fit(group_data[time_col], event_observed=group_data[event_col], label=group)
+        kmf.fit(group_data[time_col].div(12), event_observed=group_data[event_col], label=group)    # conversion months -> years
         # make sure color coding is consistent
         if ">" in group and not "≤" in group:
             color = '#1f77b4' # blue
@@ -90,8 +99,8 @@ def plot_kaplan_meier(data, time_col, event_col, group_col, p_value, group_sizes
         kmf.plot_survival_function(color=color)
 
     plt.title('Kaplan-Meier Survival Curve by Group')
-    plt.xlabel('Time (Months)')
-    plt.ylabel('Survival Probability')
+    plt.xlabel('Time (Years)')
+    plt.ylabel('Percent Survival')
     plt.legend()
 
     # Add text box with additional information
@@ -127,7 +136,7 @@ def perform_logrank_test(data, time_col, event_col, group_col):
     return results
 
 
-def main(file_path, time_col, event_col, hi_file_path=None, hti_threshold=0.5, split_mode='binary'):
+def main(file_path, time_col, event_col, hi_file_path=None, hti_threshold=[0.5], split_mode='binary'):
     """
     :param file_path: clinical.csv, clinical data file holding survival information and optionally a column holding
     the heterogeneity value with a column name from 'potential_colnames_HTI'
@@ -154,12 +163,12 @@ def main(file_path, time_col, event_col, hi_file_path=None, hti_threshold=0.5, s
         log_rank_results = perform_logrank_test(km_data, 'Overall Survival (Months)',
                                                 'Overall Survival Status', 'HI Group')
 
-        print(log_rank_results)
-        alpha = 0.05
-        if log_rank_results.p_value <= alpha:
-            print(f"p-value {log_rank_results.p_value} significant with significance level {alpha}")
-        else:
-            print(f"p-value {log_rank_results.p_value} \033[1mnot\033[0m significant with significance level {alpha}.")
+        # print(log_rank_results)
+        # alpha = 0.05
+        # if log_rank_results.p_value <= alpha:
+        #     print(f"p-value {log_rank_results.p_value} significant with significance level {alpha}")
+        # else:
+        #     print(f"p-value {log_rank_results.p_value} \033[1mnot\033[0m significant with significance level {alpha}.")
 
         # Plot Kaplan-Meier curves
         group_sizes = km_data['HI Group'].value_counts().sort_index().tolist()
@@ -185,12 +194,12 @@ if __name__ == "__main__":
                         default=None,
                         help="Path to a file containing the heterogeneity index list (one value per line).")
     parser.add_argument("--hti_threshold", type=float, nargs='+',
-                        # default=[0.5],
-                        default=[0.3, 0.7],
+                        default=[0.5],
+                        # default=[0.3, 0.7],
                         help="Heterogeneity threshold value(s). Provide one value for binary split or two values for ternary split.")
     parser.add_argument("--split_mode", type=str, choices=['binary', 'ternary'],
-                        # default='binary',
-                        default='ternary',
+                        default='binary',
+                        # default='ternary',
                         help="Choose 'binary' for two groups or 'ternary' for three groups based on HI thresholds.")
 
     args = parser.parse_args()
