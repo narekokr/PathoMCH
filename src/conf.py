@@ -87,7 +87,7 @@ class Conf_COAD(Conf):
     def __init__(self, is_preprocessing=False):
         super().__init__(is_preprocessing)
         self.TCGA_COHORT_NAME = 'coad'
-        self.CLINICAL_FILEPATH = '../res/merged_clinical_mirna_data.csv'
+        self.CLINICAL_FILEPATH = '../res/merged_clinical_mirna_data_test.csv'
         self.GCS_PATTERN_PER_SAMPLE = \
             '../res/patho_al/tfrecords/coad/per_sample/tf_records_zoom_20_labels_dummy_neg_dummy_pos/*tfrecords'
         self.PANCAN_NAME_SUFFIX = 'COAD_UNHEALTHY_SAMPLES'
@@ -158,10 +158,10 @@ class Conf_COAD_TRAITS_mir_17_extreme(Conf_COAD):
 class Conf_COAD_DUMMY_LABEL(Conf_COAD):
     def __init__(self, is_preprocessing=False):
         super().__init__(is_preprocessing)
-        self.NAME = 'hsa_mir_1269a_lo_vs_hi'
+        self.NAME = 'hsa_mir_17_lo_vs_hi'
         self.DUMMY = True
-        self.CLINICAL_LABEL_COLS = ['Dummy']
-        self.LOAD_WEIGHTS_PATH = '../out/hsa_mir_1269a_lo_vs_hi_zoom_20_round_0_2024_06_30_14_38_54/auc'
+        self.CLINICAL_LABEL_COLS = ['Dummy_17']
+        self.LOAD_WEIGHTS_PATH = '../out/hsa_mir_17_lo_vs_hi_zoom_20_round_0_2024_06_30_18_14_47/auc'
         self.GCS_PATTERN = 'gs://dsitls-project/data/{}{{}}*.tfrec'.format(self.NAME)
         self.GCS_PATTERN_LOCAL = '../res/{}/{{}}*.tfrec'.format(self.NAME)
         self.GCS_PATTERN_PER_SAMPLE = '../res/all_samples_dummy_labels/*tfrecords'

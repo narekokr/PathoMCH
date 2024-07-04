@@ -25,26 +25,26 @@ class Conf_Postprocess():
         self.MODEL_PREDS_DIR_WITH_RESAMPLE_ROUND = self.PREDS_DIR + self.MODEL_DIR + self._model_name_with_resample_round
 
     def get_test_patients(self):
-        patients_test = load_obj('test_img_paths_DX', self.DATA_SPLIT_DIR + 'test/')
+        patients_test = load_obj('test_img_paths_DX', self.DATA_SPLIT_DIR + 'test')
         patients_test = list(set([p.split('/')[-1].split('.')[0][:12] for p in patients_test]))
         return patients_test
 
     def get_val_train_patients(self, resample_round):
-        patients_train = load_obj('train_img_paths_DX_round_{}'.format(resample_round), self.DATA_SPLIT_DIR + 'train/')
+        patients_train = load_obj('train_img_paths_DX_round_{}'.format(resample_round), self.DATA_SPLIT_DIR + 'train')
         patients_train = list(set([p.split('/')[-1].split('.')[0][:12] for p in patients_train]))
-        patients_val = load_obj('val_img_paths_DX_round_{}'.format(resample_round), self.DATA_SPLIT_DIR + 'val/')
+        patients_val = load_obj('val_img_paths_DX_round_{}'.format(resample_round), self.DATA_SPLIT_DIR + 'val')
         patients_val = list(set([p.split('/')[-1].split('.')[0][:12] for p in patients_val]))
         return patients_val, patients_train
 
     def get_test_slides(self):
-        patients_test = load_obj('test_img_paths_DX', self.DATA_SPLIT_DIR + 'test/')
+        patients_test = load_obj('test_img_paths_DX', self.DATA_SPLIT_DIR + 'test')
         patients_test = list(set([p.split('/')[-1].split('.')[0][:15] for p in patients_test]))
         return patients_test
 
     def get_val_slides(self, resample_round):
-        patients_train = load_obj('train_img_paths_DX_round_{}'.format(resample_round), self.DATA_SPLIT_DIR + 'train/')
+        patients_train = load_obj('train_img_paths_DX_round_{}'.format(resample_round), self.DATA_SPLIT_DIR + 'train')
         patients_train = list(set([p.split('/')[-1].split('.')[0][:15] for p in patients_train]))
-        patients_val = load_obj('val_img_paths_DX_round_{}'.format(resample_round), self.DATA_SPLIT_DIR + 'val/')
+        patients_val = load_obj('val_img_paths_DX_round_{}'.format(resample_round), self.DATA_SPLIT_DIR + 'val')
         patients_val = list(set([p.split('/')[-1].split('.')[0][:15] for p in patients_val]))
         return patients_val, patients_train
 

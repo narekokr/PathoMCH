@@ -13,3 +13,5 @@ data
 rna
 gdc-data
 venv
+
+res/postprocess

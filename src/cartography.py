@@ -90,7 +90,7 @@ class Cartography():
 
 if __name__ == '__main__':
 
-    confs = [Conf_BRCA_TRAITS_MKI67_extreme()]
+    confs = [Conf_COAD_DUMMY_LABEL()]
     # confs = [Conf_BRCA_TRAITS_miR_17_5p_extreme()]
     # confs = [Conf_BRCA_TRAITS_FOXA1_extreme()]
     # confs = [Conf_BRCA_TRAITS_MYC_extreme()]
