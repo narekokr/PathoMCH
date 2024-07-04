@@ -7,8 +7,11 @@ import argparse
 from difflib import get_close_matches
 import os
 
+def create_group_string_from_data_row(row, hti_threshold, stratify_by):
+    pass
 
-def prepare_data(file_path, time_col, event_col, hi_list=None, hti_threshold=[0.5], split_mode='binary'):
+def prepare_data(file_path, time_col, event_col, hi_list=None, hti_threshold=[0.5], split_mode='binary',
+                 stratify_by="Sex"):
     # Load the data
     data = pd.read_csv(file_path)
     # Convert the event column to binary (0 for living/censored, 1 for deceased/event occurred)
@@ -48,32 +51,41 @@ def prepare_data(file_path, time_col, event_col, hi_list=None, hti_threshold=[0.
 
         # Add the HI column to the data
         # data['HI'] = hi_col
-
         # Determine the group based on HI thresholds
         if isinstance(hti_threshold, list) and len(hti_threshold) == 2:
             # two thresholds
             lower, upper = sorted(hti_threshold)
             if split_mode == 'ternary':
-                data['HI Group'] = hi_col.apply(lambda x:
+                group_string = hi_col.apply(lambda x:
                                                 f'HT-Index ≤ {lower}' if x <= lower
                                                 else
                                                 (f'{lower} < HT-Index ≤ {upper}' if x <= upper
                                                  else
                                                  f'HT-Index > {upper}'))
             else:
-                data['HI Group'] = hi_col.apply(lambda x:
+                group_string = hi_col.apply(lambda x:
                                                 f'HT-Index ≤ {lower}' if x <= lower
                                                 else
                                                 (f'HT-Index > {upper}' if x > upper
                                                  else
                                                 'Excluded'))
-                data = data[data['HI Group'] != 'Excluded']
         else:
             # one threshold
             threshold = hti_threshold[0]
-            data['HI Group'] = hi_col.apply(lambda x:
+            group_string = hi_col.apply(lambda x:
                                             f'HT-Index ≤ {threshold}' if x <= threshold
                                             else f'HT-Index >{threshold}')
+        data['HI Group'] = group_string
+        if stratify_by == "Sex":
+            for index, row in data.iterrows():
+                if row['Sex'] == "Female":
+                    data.at[index, 'HI Group'] = "Fem.: " + row['HI Group']
+                elif row["Sex"] == "Male":
+                    data.at[index, 'HI Group'] = "Male: " + row['HI Group']
+
+        elif stratify_by == "Age":
+            super_groups = ["30-60", "60-90"]
+        # for super_group in super_groups:
 
         # Drop rows with missing values in the survival columns
         km_data = data[[time_col, event_col, 'HI Group']].dropna()
@@ -91,9 +103,18 @@ def plot_kaplan_meier(data, time_col, event_col, group_col, p_value, group_sizes
         kmf.fit(group_data[time_col].div(12), event_observed=group_data[event_col], label=group)    # conversion months -> years
         # make sure color coding is consistent
         if ">" in group and not "≤" in group:
-            color = '#1f77b4' # blue
+            color = '#1f77b4'  # blue
+            if group.startswith("Fem."):
+                color = '#6A3D9A'
+            else:
+                color = '#017374'
+
         elif "≤" in group and not ">" in group and not "<" in group:
             color = '#ff7f0e' # orange
+            if group.startswith("Fem."):
+                color = '#B39DDB'
+            else:
+                color = '#20B2AA'
         else:
             color = 'green'
         kmf.plot_survival_function(color=color)
@@ -130,6 +151,16 @@ def perform_logrank_test(data, time_col, event_col, group_col):
         results = logrank_test(group_data[0][time_col], group_data[2][time_col],
                                event_observed_A=group_data[0][event_col],
                                event_observed_B=group_data[2][event_col])
+    elif len(unique_groups) == 4:
+        # stratified by sex
+        groupA = pd.concat([group_data_point for group_data_point in group_data if ">" in group_data_point.values[1][
+            -1]])
+        groupB = pd.concat([group_data_point for group_data_point in group_data if "≤" in group_data_point.values[1][
+            -1]])
+        results = logrank_test(groupA[time_col], groupB[time_col],
+                               event_observed_A=groupA[event_col],
+                               event_observed_B=groupB[event_col])
+        pass
     else:
         raise ValueError("The data should be split into either 2 or 3 groups based on the HTI thresholds.")
 
@@ -174,6 +205,9 @@ def main(file_path, time_col, event_col, hi_file_path=None, hti_threshold=[0.5],
         group_sizes = km_data['HI Group'].value_counts().sort_index().tolist()
         plot_kaplan_meier(km_data, 'Overall Survival (Months)', 'Overall Survival Status',
                           'HI Group', log_rank_results.p_value, group_sizes, hti_threshold=hti_threshold)
+
+        # plot_kaplan_meier(km_data, 'Overall Survival (Months)', 'Overall Survival Status',
+        #               'HI Group', p_value=0.0001, group_sizes=group_sizes, hti_threshold=hti_threshold)
 
 
 if __name__ == "__main__":
