@@ -28,6 +28,10 @@ parser.add_argument('--resample_round', type=int, default=0,
                     help='Resample round to use (default: 0).')
 parser.add_argument('--use_local_data', type=bool, default=True,
                     help='Whether to use local data (default: True).')
+parser.add_argument('--out_path', type=str,
+                    help='Path of the weights to use.')
+parser.add_argument('--class_name', type=str,
+                    help='Name of the class to use.')
 args = parser.parse_args()
 
 # Dynamically import the specified configuration class
@@ -39,6 +43,8 @@ c = config_class()
 training = False  # set to False for predictions
 resample_round = args.resample_round  # which of the resampling rounds to use
 use_local_data = args.use_local_data  # whether to use local data
+out_path = args.out_path
+class_name = args.class_name
 print("Resample round {}".format(resample_round))
 
 # Training settings
@@ -140,6 +146,11 @@ with strategy.scope():
             assert c.LOAD_WEIGHTS_PATH, "LOAD_WEIGHTS_PATH is None!"
         conf_architecture = c
         conf_per_sample_tfrecords = c
+
+        print(out_path)
+        if out_path:
+            c.LOAD_WEIGHTS_PATH = out_path
+            c.NAME = class_name
         log.print_and_log("Inference using weights under: {}".format(c.LOAD_WEIGHTS_PATH))
         # evaluate against ground truth
         predict_per_sample(c, conf_architecture, c.LOAD_WEIGHTS_PATH, model,

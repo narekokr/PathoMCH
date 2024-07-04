@@ -11,6 +11,8 @@ SBATCH_QOS="prio"
 CONFIG_CLASS="Conf_COAD_TRAITS_mir_1269a_extreme"
 RESAMPLE_ROUND=0
 USE_LOCAL_DATA=true
+OUT_PATH=true
+CLASS_NAME=true
 
 # Parse sbatch parameters from command-line arguments
 while [[ "$#" -gt 0 ]]; do
@@ -25,6 +27,8 @@ while [[ "$#" -gt 0 ]]; do
         --config_class) CONFIG_CLASS="$2"; shift ;;
         --resample_round) RESAMPLE_ROUND="$2"; shift ;;
         --use_local_data) USE_LOCAL_DATA="$2"; shift ;;
+        --out_path) OUT_PATH="$2"; shift ;;
+        --class_name) CLASS_NAME="$2"; shift ;;
         *) echo "Unknown parameter passed: $1"; exit 1 ;;
     esac
     shift
@@ -51,7 +55,7 @@ export CUDA_DIR=\$CUDA_HOME
 export XLA_FLAGS=\"--xla_gpu_cuda_data_dir=\$CUDA_DIR\"
 
 # Run the model.py script with the specified parameters
-python model.py --config_class \"${CONFIG_CLASS}\" --resample_round \"${RESAMPLE_ROUND}\" --use_local_data \"${USE_LOCAL_DATA}\"
+python model.py --config_class \"${CONFIG_CLASS}\" --resample_round \"${RESAMPLE_ROUND}\" --use_local_data \"${USE_LOCAL_DATA}\" --out_path \"${OUT_PATH}\" --class_name \"${CLASS_NAME}\"
 "
 
 # Create a temporary sbatch script
