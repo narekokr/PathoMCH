@@ -15,52 +15,66 @@ def prepare_data(file_path, time_col, event_col, hi_list=None, hti_threshold=0.5
     data[event_col] = data[event_col].map(lambda x: 0 if x == '0:LIVING' else 1)
 
     # Identify heterogeneity index column
-    potential_colnames_HTI = ['HI', 'HTI', 'HT-Index', 'HT - Index', 'heterogeneity index']
-    hetero_index_colname = next((col for col in data.columns
-                                 if any(get_close_matches(col.lower(), [s.lower()], cutoff=0.7)
-                                        for s in potential_colnames_HTI)), None)
+    potential_colnames_HTI = ['HI', 'HTI', 'HT-Index', 'HT - Index', 'heterogeneity', 'heterogeneity index']
+    potential_colnames_HTI = ['heterogeneity']
+    #hetero_index_colname = next((col for col in data.columns
+    #                             if any(get_close_matches(col.lower(), [s.lower()], cutoff=0.7)
+    #                                    for s in potential_colnames_HTI)), None)
+    #hetero_index_colnames = [ col for col in data.columns if any(
+    #                            [get_close_matches(col.lower(),s.lower(), cutoff=0.7) for s in potential_colnames_HTI)]
+    #                        ]
 
-    if hetero_index_colname:
-        hi_col = data[hetero_index_colname]
-    elif hi_list is not None:
-        # Use the provided HI list
-        hi_col = pd.Series(hi_list)
-        if len(hi_col) != len(data):
-            raise ValueError("Length of HI list does not match the number of rows in the CSV")
-    else:
-        # Generate HI values randomly for test purposes
-        # np.random.seed(42)  # For reproducibility
-        hi_col = np.random.normal(loc=0.5, scale=0.15, size=len(data))
-        hi_col = np.clip(hi_col, 0, 1)
+    hetero_index_colnames = []
+    for col in data.columns:
+        if any([s.lower() in col.lower() for s in potential_colnames_HTI]):
+            hetero_index_colnames.append(col)
 
-    # Add the HI column to the data
-    data['HI'] = hi_col
-
-    # Determine the group based on HI thresholds
-    if isinstance(hti_threshold, list) and len(hti_threshold) == 2:
-        lower, upper = sorted(hti_threshold)
-        if split_mode == 'ternary':
-            data['HI Group'] = data['HI'].apply(lambda x: f'HT-Index ≤ {lower}' if x <= lower else
-            (f'{lower} < HT-Index ≤ {upper}' if x <= upper else
-             f'HT-Index > {upper}'))
+    km_data_collector=[]
+    for hetero_index_colname in hetero_index_colnames:
+        if hetero_index_colname:
+            hi_col = data[hetero_index_colname]
+        elif hi_list is not None:
+            # Use the provided HI list
+            hi_col = pd.Series(hi_list)
+            if len(hi_col) != len(data):
+                raise ValueError("Length of HI list does not match the number of rows in the CSV")
         else:
-            data['HI Group'] = data['HI'].apply(lambda x: f'HT-Index ≤ {lower}' if x <= lower else
-            (f'HT-Index > {upper}' if x > upper else
-             'Excluded'))
-            data = data[data['HI Group'] != 'Excluded']
-    else:
-        hti_threshold = hti_threshold[0]
-        data['HI Group'] = data['HI'].apply(lambda x: f'HT-Index ≤ {hti_threshold}'
-        if x <= hti_threshold else f'HT-Index > {hti_threshold}')
+            # Generate HI values randomly for test purposes
+            # np.random.seed(42)  # For reproducibility
+            print("Warning: No HTI Values found. Generating.")
+            hi_col = np.random.normal(loc=0.5, scale=0.15, size=len(data))
+            hi_col = np.clip(hi_col, 0, 1)
 
-    # Drop rows with missing values in the survival columns
-    km_data = data[[time_col, event_col, 'HI Group']].dropna()
+        # Add the HI column to the data
+        data['HI'] = hi_col
 
-    return km_data
+        # Determine the group based on HI thresholds
+        if isinstance(hti_threshold, list) and len(hti_threshold) == 2:
+            lower, upper = sorted(hti_threshold)
+            if split_mode == 'ternary':
+                data['HI Group'] = data['HI'].apply(lambda x: f'HT-Index ≤ {lower}' if x <= lower else
+                (f'{lower} < HT-Index ≤ {upper}' if x <= upper else
+                 f'HT-Index > {upper}'))
+            else:
+                data['HI Group'] = data['HI'].apply(lambda x: f'HT-Index ≤ {lower}' if x <= lower else
+                (f'HT-Index > {upper}' if x > upper else
+                 'Excluded'))
+                data = data[data['HI Group'] != 'Excluded']
+        else:
+            hti_threshold = hti_threshold[0]
+            data['HI Group'] = data['HI'].apply(lambda x: f'HT-Index ≤ {hti_threshold}'
+            if x <= hti_threshold else f'HT-Index > {hti_threshold}')
+
+        # Drop rows with missing values in the survival columns
+        km_data = data[[time_col, event_col, 'HI Group']].dropna()
+        km_data_collector.append(km_data)
+
+    return km_data_collector
 
 
 def plot_kaplan_meier(data, time_col, event_col, group_col, p_value, group_sizes, hti_threshold):
     kmf = KaplanMeierFitter()
+    kmf.new()
 
     # Plot survival curves for each group
     for group in data[group_col].sort_values().unique():
@@ -133,29 +147,30 @@ def main(file_path, time_col, event_col, hi_file_path=None, hti_threshold=0.5, s
             hi_list = [float(line.strip()) for line in file.readlines()]
 
     # Prepare the data
-    km_data = prepare_data(file_path, time_col, event_col, hi_list, hti_threshold=hti_threshold, split_mode=split_mode)
+    km_data_list = prepare_data(file_path, time_col, event_col, hi_list, hti_threshold=hti_threshold, split_mode=split_mode)
 
+    for km_data in km_data_list:
     # Perform log-rank test
-    log_rank_results = perform_logrank_test(km_data, 'Overall Survival (Months)',
-                                            'Overall Survival Status', 'HI Group')
+        log_rank_results = perform_logrank_test(km_data, 'Overall Survival (Months)',
+                                                'Overall Survival Status', 'HI Group')
 
-    print(log_rank_results)
-    alpha = 0.05
-    if log_rank_results.p_value <= alpha:
-        print(f"p-value {log_rank_results.p_value} significant with significance level {alpha}")
-    else:
-        print(f"p-value {log_rank_results.p_value} \033[1mnot\033[0m significant with significance level {alpha}.")
+        print(log_rank_results)
+        alpha = 0.05
+        if log_rank_results.p_value <= alpha:
+            print(f"p-value {log_rank_results.p_value} significant with significance level {alpha}")
+        else:
+            print(f"p-value {log_rank_results.p_value} \033[1mnot\033[0m significant with significance level {alpha}.")
 
-    # Plot Kaplan-Meier curves
-    group_sizes = km_data['HI Group'].value_counts().sort_index().tolist()
-    plot_kaplan_meier(km_data, 'Overall Survival (Months)', 'Overall Survival Status',
-                      'HI Group', log_rank_results.p_value, group_sizes, hti_threshold=hti_threshold)
+        # Plot Kaplan-Meier curves
+        group_sizes = km_data['HI Group'].value_counts().sort_index().tolist()
+        plot_kaplan_meier(km_data, 'Overall Survival (Months)', 'Overall Survival Status',
+                          'HI Group', log_rank_results.p_value, group_sizes, hti_threshold=hti_threshold)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Kaplan-Meier Survival Analysis")
     parser.add_argument("--clinical_csv", type=str,
-                        default='../../..//res/merged_clinical_mirna_data.csv',
+                        default='../../..//res/merged_clinical_mirna_data_test.csv',
                         help="Path to the CSV file containing the data.")
     parser.add_argument("--time_col", type=str,
                         default='Overall Survival (Months)',
