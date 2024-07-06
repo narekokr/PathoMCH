@@ -1,19 +1,29 @@
-import pandas as pd
+import argparse
+import os
+import re
+
+import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from lifelines import KaplanMeierFitter
 from lifelines.statistics import logrank_test
-import matplotlib.pyplot as plt
-import argparse
-from difflib import get_close_matches
-import os
 
-def create_group_string_from_data_row(row, hti_threshold, stratify_by):
-    pass
+
+def sanitize_filepath(input_str, replacement='_'):
+    # Remove or replace characters not allowed in filepaths
+    sanitized_str = re.sub(r'[\s:"/\\|?*]', replacement, input_str)
+    sanitized_str = sanitized_str.replace("<", 'st')
+    sanitized_str = sanitized_str.replace(">", 'gt')
+    sanitized_str = sanitized_str.strip().strip('.')
+
+    # On Windows filepaths must be shorter than 260 characters
+    if os.name == 'nt' and len(sanitized_str) > 260:
+        sanitized_str = sanitized_str[:260]
+
+    return sanitized_str
+
 
 def create_km_data(data, time_col, event_col, hi_list, hti_threshold, split_mode, stratify_group=None):
-    # Convert the event column to binary (0 for living/censored, 1 for deceased/event occurred)
-    data[event_col] = data[event_col].map(lambda x: 0 if x == '0:LIVING' else 1)
-
     # Identify heterogeneity index column
     potential_colnames_HTI = ['heterogeneity']
 
@@ -54,16 +64,14 @@ def create_km_data(data, time_col, event_col, hi_list, hti_threshold, split_mode
                 group_string = hi_col.apply(lambda x:
                                             f'HT-Index ≤ {lower}' if x <= lower
                                             else
-                                            (f'HT-Index > {upper}' if x > upper
-                                             else
-                                             'Excluded'))
+                                            f'HT-Index > {upper}')
         else:
             # one threshold
             threshold = hti_threshold[0]
             group_string = hi_col.apply(lambda x:
                                         f'HT-Index ≤ {threshold}' if x <= threshold
                                         else f'HT-Index >{threshold}')
-        data['HI Group'] = group_string
+        # data['HI Group'] = group_string
         # merged plots for stratification case, currently not wanted
         # if stratify_by == "Sex":
         #     for index, row in data.iterrows():
@@ -74,11 +82,14 @@ def create_km_data(data, time_col, event_col, hi_list, hti_threshold, split_mode
         #
 
         # Drop rows with missing values in the survival columns
-        km_data = data[[time_col, event_col, hetero_index_colname, 'HI Group']].copy().dropna()
+        # km_data = data[[time_col, event_col, hetero_index_colname, 'HI Group']].copy().dropna()
+        km_data = data[[time_col, event_col, hetero_index_colname]].copy()
+        km_data["HI Group"] = group_string
+        km_data = km_data.dropna()
         if stratify_group:
             km_data.columns.name = ";X;".join([stratify_group.capitalize(), hetero_index_colname])
         else:
-            km_data.columns.name = ";X;"+hetero_index_colname
+            km_data.columns.name = ";X;" + hetero_index_colname
         km_data_collector.append(km_data)
     return km_data_collector
 
@@ -93,13 +104,16 @@ def get_age_boundaries(age_list, k=1):
     boundaries = [round(min_age + (i + 1) * step, 0) for i in range(k)]
 
     return boundaries
+
+
 def prepare_data(file_path, time_col, event_col, hi_list=None, hti_threshold=[0.5], split_mode='binary',
                  stratify_by=None):
-
     # Load the data
     dataset = pd.read_csv(file_path)
+    # Convert the event column to binary (0 for living/censored, 1 for deceased/event occurred)
+    dataset[event_col] = dataset[event_col].map(lambda x: 0 if x == '0:LIVING' else 1)
 
-    #stratify, if wanted
+    # stratify, if wanted
     if stratify_by:
         if stratify_by.lower() == "sex":
             fem_data = dataset[dataset["Sex"] == "Female"].copy()
@@ -114,7 +128,7 @@ def prepare_data(file_path, time_col, event_col, hi_list=None, hti_threshold=[0.
                 if bins == 2:
                     pass
                 else:
-                    boundaries = get_age_boundaries(dataset["Diagnosis Age"], bins-1)
+                    boundaries = get_age_boundaries(dataset["Diagnosis Age"], bins - 1)
                     data_collector = []
                     last_bound = 0
                     for bound in boundaries:
@@ -148,7 +162,7 @@ def prepare_data(file_path, time_col, event_col, hi_list=None, hti_threshold=[0.
     if not stratify_by:
         data_collector = [dataset]
 
-    km_data_collector=[]
+    km_data_collector = []
     for data in data_collector:
         if data.columns.name:
             km_data = create_km_data(data, time_col, event_col, hi_list, hti_threshold, split_mode,
@@ -158,6 +172,7 @@ def prepare_data(file_path, time_col, event_col, hi_list=None, hti_threshold=[0.
         km_data_collector.extend(km_data)
 
     return km_data_collector
+
 
 def make_hti_colname_easy_to_read(hti_colname):
     transformed_str = hti_colname.replace("_mrna_", " mRNA ")
@@ -178,7 +193,8 @@ def make_hti_colname_easy_to_read(hti_colname):
 
     return final_result
 
-def plot_kaplan_meier(data, time_col, event_col, group_col, p_value, group_sizes, hti_threshold):
+
+def plot_kaplan_meier(data, time_col, event_col, group_col, p_value, group_sizes, hti_threshold, outpath=None):
     kmf = KaplanMeierFitter()
     if data.columns.name:
         stratify_group = data.columns.name.split(';X;')[0]
@@ -191,7 +207,8 @@ def plot_kaplan_meier(data, time_col, event_col, group_col, p_value, group_sizes
     # Plot survival curves for each group
     for group in data[group_col].sort_values().unique():
         group_data = data[data[group_col] == group]
-        kmf.fit(group_data[time_col].div(12), event_observed=group_data[event_col], label=group)    # conversion months -> years
+        kmf.fit(group_data[time_col].div(12), event_observed=group_data[event_col],
+                label=group)  # conversion months -> years
         # make sure color coding is consistent
         if ">" in group and not "≤" in group:
             color = '#1f77b4'  # blue
@@ -201,7 +218,7 @@ def plot_kaplan_meier(data, time_col, event_col, group_col, p_value, group_sizes
                 color = '#017374'
 
         elif "≤" in group and not ">" in group and not "<" in group:
-            color = '#ff7f0e' # orange
+            color = '#ff7f0e'  # orange
             if group.startswith("Fem.") or stratify_group.lower() == "female":
                 color = '#B39DDB'
             elif group.startswith("Male") or stratify_group.lower() == "male":
@@ -229,7 +246,15 @@ def plot_kaplan_meier(data, time_col, event_col, group_col, p_value, group_sizes
 
     plt.gca().text(0.05, 0.05, textstr, transform=plt.gca().transAxes, fontsize=9, verticalalignment='bottom')
 
-    plt.show()
+    if outpath:
+        filename = "_".join([hti_colname,stratify_group,"kaplan_meier.png"])
+        filename = sanitize_filepath(filename)
+        filepath = os.path.join(outpath, filename)
+        plt.savefig(filepath)
+        print("Saved plot at: ", filepath)
+        plt.close()
+    else:
+        plt.show()
 
 
 def perform_logrank_test(data, time_col, event_col, group_col):
@@ -242,7 +267,7 @@ def perform_logrank_test(data, time_col, event_col, group_col):
 
     if len(unique_groups) < 2:
         print("At least one group for logranks test is empty. Skipping dataset.")
-        results=None
+        results = None
 
     elif len(unique_groups) == 2:
         results = logrank_test(group_data[0][time_col], group_data[1][time_col],
@@ -252,15 +277,15 @@ def perform_logrank_test(data, time_col, event_col, group_col):
         results = logrank_test(group_data[0][time_col], group_data[2][time_col],
                                event_observed_A=group_data[0][event_col],
                                event_observed_B=group_data[2][event_col])
-    # elif len(unique_groups) == 4:
-    #     # stratified by sex, in one plot
-    #     groupA = pd.concat([group_data_point for group_data_point in group_data if ">" in group_data_point.values[1][
-    #         -1]])
-    #     groupB = pd.concat([group_data_point for group_data_point in group_data if "≤" in group_data_point.values[1][
-    #         -1]])
-    #     results = logrank_test(groupA[time_col], groupB[time_col],
-    #                            event_observed_A=groupA[event_col],
-    #                            event_observed_B=groupB[event_col])
+        # elif len(unique_groups) == 4:
+        #     # stratified by sex, in one plot
+        #     groupA = pd.concat([group_data_point for group_data_point in group_data if ">" in group_data_point.values[1][
+        #         -1]])
+        #     groupB = pd.concat([group_data_point for group_data_point in group_data if "≤" in group_data_point.values[1][
+        #         -1]])
+        #     results = logrank_test(groupA[time_col], groupB[time_col],
+        #                            event_observed_A=groupA[event_col],
+        #                            event_observed_B=groupB[event_col])
         pass
     else:
         raise ValueError("The data should be split into either 2 or 3 groups based on the HTI thresholds.")
@@ -268,7 +293,8 @@ def perform_logrank_test(data, time_col, event_col, group_col):
     return results
 
 
-def main(file_path, time_col, event_col, hi_file_path=None, hti_threshold=[0.5], split_mode='binary', stratify_by=None):
+def main(file_path, time_col, event_col, hi_file_path=None, hti_threshold=[0.5], split_mode='binary',
+         stratify_by=None, outpath=None):
     """
     :param file_path: clinical.csv, clinical data file holding survival information and optionally a column holding
     the heterogeneity value with a column name from 'potential_colnames_HTI'
@@ -283,6 +309,10 @@ def main(file_path, time_col, event_col, hi_file_path=None, hti_threshold=[0.5],
     age bins (2 by default, split by median)
     :param split_mode: Choose 'binary' for two groups or 'ternary' for three groups based on HI thresholds.
     """
+
+    if outpath and not os.path.exists(outpath):
+        os.makedirs(outpath)
+
     # Load HI list if provided
     hi_list = None
     if hi_file_path and os.path.exists(hi_file_path):
@@ -294,7 +324,7 @@ def main(file_path, time_col, event_col, hi_file_path=None, hti_threshold=[0.5],
                                 split_mode=split_mode, stratify_by=stratify_by)
 
     for km_data in km_data_list:
-    # Perform log-rank test
+        # Perform log-rank test
         log_rank_results = perform_logrank_test(km_data, 'Overall Survival (Months)',
                                                 'Overall Survival Status', 'HI Group')
         if log_rank_results:
@@ -304,18 +334,20 @@ def main(file_path, time_col, event_col, hi_file_path=None, hti_threshold=[0.5],
             if log_rank_results.p_value <= alpha:
                 print(f"p-value {log_rank_results.p_value} significant with significance level {alpha}")
             else:
-                print(f"p-value {log_rank_results.p_value} \033[1mnot\033[0m significant with significance level {alpha}.")
+                print(
+                    f"p-value {log_rank_results.p_value} \033[1mnot\033[0m significant with significance level {alpha}.")
 
             # Plot Kaplan-Meier curves
             group_sizes = km_data['HI Group'].value_counts().sort_index().tolist()
             plot_kaplan_meier(km_data, 'Overall Survival (Months)', 'Overall Survival Status',
-                              'HI Group', log_rank_results.p_value, group_sizes, hti_threshold=hti_threshold)
+                              'HI Group', log_rank_results.p_value, group_sizes, hti_threshold=hti_threshold,
+                              outpath=outpath)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Kaplan-Meier Survival Analysis")
     parser.add_argument("--clinical_csv", type=str,
-                        default='../../..//res/merged_clinical_mirna_data_test.csv',
+                        default='../../../res/merged_clinical_mirna_data_test.csv',
                         help="Path to the CSV file containing the data.")
     parser.add_argument("--time_col", type=str,
                         default='Overall Survival (Months)',
@@ -330,22 +362,25 @@ if __name__ == "__main__":
                         default=None,
                         help="Path to a file containing the heterogeneity index list (one value per line).")
     parser.add_argument("--hti_threshold", type=float, nargs='+',
-                        default=[0.5],
-                        # default=[0.3, 0.7],
+                        # default=[0.5],
+                        default=[0.3, 0.7],
                         help="Heterogeneity threshold value(s). Provide one value for binary split or two values for ternary split.")
     parser.add_argument("--stratify_by", type=str, nargs='+',
-                        # default=None,
+                        default=None,
                         # default="Sex",
                         # default="Age",
-                        default="Age_3",
+                        # default="Age_3",
                         help="Subgroup feature to stratify by. Either \"Sex\" or \"Age_n\", where n is the number of "
                              "age bins (2 by default, split by median)")
     parser.add_argument("--split_mode", type=str, choices=['binary', 'ternary'],
                         default='binary',
                         # default='ternary',
                         help="Choose 'binary' for two groups or 'ternary' for three groups based on HI thresholds.")
-
+    parser.add_argument("--outpath", type=str,
+                        default="../../../out/survival_analysis",
+                        # default=None,
+                        help="Path to the output directory for plots.")
     args = parser.parse_args()
 
     main(args.clinical_csv, args.time_col, args.event_col, args.hi_file_path, hti_threshold=args.hti_threshold,
-         split_mode=args.split_mode, stratify_by=args.stratify_by)
+         split_mode=args.split_mode, stratify_by=args.stratify_by, outpath=args.outpath)
