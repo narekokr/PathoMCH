@@ -118,13 +118,16 @@ def prepare_data(file_path, time_col, event_col, hi_list=None, hti_threshold=[0.
                     data_collector = []
                     last_bound = 0
                     for bound in boundaries:
-                        if not last_bound==max(boundaries):
+                        if not last_bound == max(boundaries):
                             this_bin_data = dataset[(dataset["Diagnosis Age"] >= last_bound) |
                                                     (dataset["Diagnosis Age"] < bound)].copy()
                             this_bin_data.columns.name = f"Age >= {last_bound} < {bound}"
                             data_collector.append(this_bin_data)
                             last_bound = bound
-                            # else:
+                        # else:
+                    this_bin_data = dataset[dataset["Diagnosis Age"] >= last_bound]
+                    this_bin_data.columns.name = f"Age >= {bound}"
+                    data_collector.append(this_bin_data)
 
                     pass
             try:
