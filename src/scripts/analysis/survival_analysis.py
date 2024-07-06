@@ -180,15 +180,26 @@ def make_hti_colname_easy_to_read(hti_colname):
 
     parts = transformed_str.split('_')
     result_parts = []
-    for part in parts:
-        # Check if the part starts with "hsa_"
-        if part.startswith('hsa'):
-            # Extract the part after "hsa_"
-            mir_part = part[4:].replace(' ', '-')
-            result_parts.append(mir_part)
-        elif part.startswith('baseline'):
-            result_parts.append(part)
+    # for part in parts:
+    #     # Check if the part starts with "hsa_"
+    #     if part.startswith('hsa'):
+    #         # Extract the part after "hsa_"
+    #         mir_part = part[4:].replace(' ', '-')
+    #         result_parts.append(mir_part)
+    #     elif part.startswith('baseline'):
+    #         result_parts.append(part)
 
+    lo_indices = [m.start() for m in re.finditer('_lo', transformed_str)]
+    for lo_index in lo_indices:
+        previous_underscore_index = [index for index in range(lo_index-1, 0, -1) if transformed_str[index] == "_"]
+        found_name = transformed_str[previous_underscore_index[0]+1: lo_index].replace(" ", "-")
+        result_parts.append(found_name)
+
+    result_parts = list(set(result_parts))
+    unwanted_names = ["hi", "and", "other"]
+    for string in unwanted_names:
+        if string in result_parts:
+            result_parts.remove(string)
     final_result = ' and '.join(result_parts)
 
     return final_result
@@ -366,8 +377,8 @@ if __name__ == "__main__":
                         default=[0.3, 0.7],
                         help="Heterogeneity threshold value(s). Provide one value for binary split or two values for ternary split.")
     parser.add_argument("--stratify_by", type=str, nargs='+',
-                        default=None,
-                        # default="Sex",
+                        # default=None,
+                        default="Sex",
                         # default="Age",
                         # default="Age_3",
                         help="Subgroup feature to stratify by. Either \"Sex\" or \"Age_n\", where n is the number of "
@@ -377,8 +388,8 @@ if __name__ == "__main__":
                         # default='ternary',
                         help="Choose 'binary' for two groups or 'ternary' for three groups based on HI thresholds.")
     parser.add_argument("--outpath", type=str,
-                        default="../../../out/survival_analysis",
-                        # default=None,
+                        # default="../../../out/survival_analysis",
+                        default=None,
                         help="Path to the output directory for plots.")
     args = parser.parse_args()
 
