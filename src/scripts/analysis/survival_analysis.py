@@ -10,6 +10,89 @@ import os
 def create_group_string_from_data_row(row, hti_threshold, stratify_by):
     pass
 
+def create_km_data(data, time_col, event_col, hi_list, hti_threshold, split_mode, stratify_group=None):
+    # Convert the event column to binary (0 for living/censored, 1 for deceased/event occurred)
+    data[event_col] = data[event_col].map(lambda x: 0 if x == '0:LIVING' else 1)
+
+    # Identify heterogeneity index column
+    potential_colnames_HTI = ['heterogeneity']
+
+    hetero_index_colnames = []
+    for col in data.columns:
+        if any([s.lower() in col.lower() for s in potential_colnames_HTI]):
+            hetero_index_colnames.append(col)
+
+    km_data_collector = []
+    print(f"{data.columns.name}: Found heterogeneity indexes in columns:\n", "\n".join(hetero_index_colnames))
+    for hetero_index_colname in hetero_index_colnames:
+        if hetero_index_colname:
+            hi_col = data[hetero_index_colname]
+        elif hi_list is not None:
+            print("Use the provided HI list")
+            hi_col = pd.Series(hi_list)
+            if len(hi_col) != len(data):
+                raise ValueError("Length of HI list does not match the number of rows in the CSV")
+        else:
+            # Generate HI values randomly for test purposes
+            # np.random.seed(42)  # For reproducibility
+            print("Warning: No HTI Values found. Generating.")
+            hi_col = np.random.normal(loc=0.5, scale=0.15, size=len(data))
+            hi_col = np.clip(hi_col, 0, 1)
+
+        # Determine the group based on HI thresholds
+        if isinstance(hti_threshold, list) and len(hti_threshold) == 2:
+            # two thresholds
+            lower, upper = sorted(hti_threshold)
+            if split_mode == 'ternary':
+                group_string = hi_col.apply(lambda x:
+                                            f'HT-Index ≤ {lower}' if x <= lower
+                                            else
+                                            (f'{lower} < HT-Index ≤ {upper}' if x <= upper
+                                             else
+                                             f'HT-Index > {upper}'))
+            else:
+                group_string = hi_col.apply(lambda x:
+                                            f'HT-Index ≤ {lower}' if x <= lower
+                                            else
+                                            (f'HT-Index > {upper}' if x > upper
+                                             else
+                                             'Excluded'))
+        else:
+            # one threshold
+            threshold = hti_threshold[0]
+            group_string = hi_col.apply(lambda x:
+                                        f'HT-Index ≤ {threshold}' if x <= threshold
+                                        else f'HT-Index >{threshold}')
+        data['HI Group'] = group_string
+        # merged plots for stratification case, currently not wanted
+        # if stratify_by == "Sex":
+        #     for index, row in data.iterrows():
+        #         if row['Sex'] == "Female":
+        #             data.at[index, 'HI Group'] = "Fem.: " + row['HI Group']
+        #         elif row["Sex"] == "Male":
+        #             data.at[index, 'HI Group'] = "Male: " + row['HI Group']
+        #
+
+        # Drop rows with missing values in the survival columns
+        km_data = data[[time_col, event_col, hetero_index_colname, 'HI Group']].copy().dropna()
+        if stratify_group:
+            km_data.columns.name = ";X;".join([stratify_group.capitalize(), hetero_index_colname])
+        else:
+            km_data.columns.name = ";X;"+hetero_index_colname
+        km_data_collector.append(km_data)
+    return km_data_collector
+
+
+def get_age_boundaries(age_list, k=1):
+    min_age = min(age_list)
+    max_age = max(age_list)
+
+    # Calculate the step size
+    step = (max_age - min_age) / (k + 1)
+    # Calculate the boundary values
+    boundaries = [round(min_age + (i + 1) * step, 0) for i in range(k)]
+
+    return boundaries
 def prepare_data(file_path, time_col, event_col, hi_list=None, hti_threshold=[0.5], split_mode='binary',
                  stratify_by=None):
 
@@ -19,112 +102,89 @@ def prepare_data(file_path, time_col, event_col, hi_list=None, hti_threshold=[0.
     #stratify, if wanted
     if stratify_by:
         if stratify_by.lower() == "sex":
-            fem_data = dataset[dataset["Sex"] == "Female"]
+            fem_data = dataset[dataset["Sex"] == "Female"].copy()
             fem_data.columns.name = "female"
-            male_data = dataset[dataset["Sex"] == "Male"]
+            male_data = dataset[dataset["Sex"] == "Male"].copy()
             male_data.columns.name = "male"
             data_collector = [fem_data, male_data]
-        elif stratify_by.lower().startswith == "age":
+        elif stratify_by.lower().startswith("age"):
             if stratify_by[-1].isdigit():
                 # number of age bins given, so we use it.
-                pass # TODO: use it
+                bins = int(stratify_by[-1])
+                if bins == 2:
+                    pass
+                else:
+                    boundaries = get_age_boundaries(dataset["Diagnosis Age"], bins-1)
+                    data_collector = []
+                    last_bound = 0
+                    for bound in boundaries:
+                        if not last_bound==max(boundaries):
+                            this_bin_data = dataset[(dataset["Diagnosis Age"] >= last_bound) |
+                                                    (dataset["Diagnosis Age"] < bound)].copy()
+                            this_bin_data.columns.name = f"Age >= {last_bound} < {bound}"
+                            data_collector.append(this_bin_data)
+                            last_bound = bound
+                            # else:
+
+                    pass
             try:
                 data_collector
             except NameError:
                 # above derivation of bins did not work, so we split into two bin with the mean as the middle
-                age_median = dataset["Diagnosis Age"].median()
-                bin1_data = dataset[(dataset['Diagnosis Age'] >= 0) | (dataset['Diagnosis Age'] < age_median)]
-                bin2_data = dataset[dataset['Diagnosis Age'] >= age_median]
+                age_median = int(dataset["Diagnosis Age"].median())
+                bin1_data = dataset[(dataset['Diagnosis Age'] >= 0) | (dataset['Diagnosis Age'] < age_median)].copy()
+                bin1_data.columns.name = f"Age >= 0 < {age_median}"
+                bin2_data = dataset[dataset['Diagnosis Age'] >= age_median].copy()
+                bin2_data.columns.name = f"Age >= {age_median}"
+
                 data_collector = [bin1_data, bin2_data]
         else:
             print(f"Warning: Stratification parameter {stratify_by} not recognized. Using whole dataset).")
             stratify_by = None
+
     if not stratify_by:
         data_collector = [dataset]
 
     km_data_collector=[]
     for data in data_collector:
-        # Convert the event column to binary (0 for living/censored, 1 for deceased/event occurred)
-        data[event_col] = data[event_col].map(lambda x: 0 if x == '0:LIVING' else 1)
-
-        # Identify heterogeneity index column
-        potential_colnames_HTI = ['heterogeneity']
-        #hetero_index_colname = next((col for col in data.columns
-        #                             if any(get_close_matches(col.lower(), [s.lower()], cutoff=0.7)
-        #                                    for s in potential_colnames_HTI)), None)
-        #hetero_index_colnames = [ col for col in data.columns if any(
-        #                            [get_close_matches(col.lower(),s.lower(), cutoff=0.7) for s in potential_colnames_HTI)]
-        #                        ]
-
-        hetero_index_colnames = []
-        for col in data.columns:
-            if any([s.lower() in col.lower() for s in potential_colnames_HTI]):
-                hetero_index_colnames.append(col)
-
-        print("Found heterogeneity indexes in columns:\n", "\n".join(hetero_index_colnames))
-        for hetero_index_colname in hetero_index_colnames:
-            if hetero_index_colname:
-                hi_col = data[hetero_index_colname]
-            elif hi_list is not None:
-                print("Use the provided HI list")
-                hi_col = pd.Series(hi_list)
-                if len(hi_col) != len(data):
-                    raise ValueError("Length of HI list does not match the number of rows in the CSV")
-            else:
-                # Generate HI values randomly for test purposes
-                # np.random.seed(42)  # For reproducibility
-                print("Warning: No HTI Values found. Generating.")
-                hi_col = np.random.normal(loc=0.5, scale=0.15, size=len(data))
-                hi_col = np.clip(hi_col, 0, 1)
-
-            # Add the HI column to the data
-            # data['HI'] = hi_col
-            # Determine the group based on HI thresholds
-            if isinstance(hti_threshold, list) and len(hti_threshold) == 2:
-                # two thresholds
-                lower, upper = sorted(hti_threshold)
-                if split_mode == 'ternary':
-                    group_string = hi_col.apply(lambda x:
-                                                    f'HT-Index ≤ {lower}' if x <= lower
-                                                    else
-                                                    (f'{lower} < HT-Index ≤ {upper}' if x <= upper
-                                                     else
-                                                     f'HT-Index > {upper}'))
-                else:
-                    group_string = hi_col.apply(lambda x:
-                                                    f'HT-Index ≤ {lower}' if x <= lower
-                                                    else
-                                                    (f'HT-Index > {upper}' if x > upper
-                                                     else
-                                                    'Excluded'))
-            else:
-                # one threshold
-                threshold = hti_threshold[0]
-                group_string = hi_col.apply(lambda x:
-                                                f'HT-Index ≤ {threshold}' if x <= threshold
-                                                else f'HT-Index >{threshold}')
-            data['HI Group'] = group_string
-            # if stratify_by == "Sex":
-            #     for index, row in data.iterrows():
-            #         if row['Sex'] == "Female":
-            #             data.at[index, 'HI Group'] = "Fem.: " + row['HI Group']
-            #         elif row["Sex"] == "Male":
-            #             data.at[index, 'HI Group'] = "Male: " + row['HI Group']
-            #
-            # elif stratify_by == "Age":
-            #     super_groups = ["30-60", "60-90"]
-            # for super_group in super_groups:
-
-            # Drop rows with missing values in the survival columns
-            km_data = data[[time_col, event_col, hetero_index_colname, 'HI Group']].dropna()
-            km_data_collector.append(km_data)
+        if data.columns.name:
+            km_data = create_km_data(data, time_col, event_col, hi_list, hti_threshold, split_mode,
+                                     stratify_group=data.columns.name)
+        else:
+            km_data = create_km_data(data, time_col, event_col, hi_list, hti_threshold, split_mode)
+        km_data_collector.extend(km_data)
 
     return km_data_collector
 
+def make_hti_colname_easy_to_read(hti_colname):
+    transformed_str = hti_colname.replace("_mrna_", " mRNA ")
+    transformed_str = transformed_str.replace("_mir_", " miR ")
+
+    parts = transformed_str.split('_')
+    result_parts = []
+    for part in parts:
+        # Check if the part starts with "hsa_"
+        if part.startswith('hsa'):
+            # Extract the part after "hsa_"
+            mir_part = part[4:].replace(' ', '-')
+            result_parts.append(mir_part)
+        elif part.startswith('baseline'):
+            result_parts.append(part)
+
+    final_result = ' and '.join(result_parts)
+
+    return final_result
 
 def plot_kaplan_meier(data, time_col, event_col, group_col, p_value, group_sizes, hti_threshold):
     kmf = KaplanMeierFitter()
-
+    if data.columns.name:
+        stratify_group = data.columns.name.split(';X;')[0]
+        hti_colname = data.columns.name.split(";X;")[-1]
+        hti_colname = make_hti_colname_easy_to_read(hti_colname)
+        pass
+    else:
+        stratify_group = ""
+        hti_colname = ""
     # Plot survival curves for each group
     for group in data[group_col].sort_values().unique():
         group_data = data[data[group_col] == group]
@@ -132,22 +192,28 @@ def plot_kaplan_meier(data, time_col, event_col, group_col, p_value, group_sizes
         # make sure color coding is consistent
         if ">" in group and not "≤" in group:
             color = '#1f77b4'  # blue
-            if group.startswith("Fem."):
+            if group.startswith("Fem.") or stratify_group.lower() == "female":
                 color = '#6A3D9A'
-            elif group.startswith("Male"):
+            elif group.startswith("Male") or stratify_group.lower() == "male":
                 color = '#017374'
 
         elif "≤" in group and not ">" in group and not "<" in group:
             color = '#ff7f0e' # orange
-            if group.startswith("Fem."):
+            if group.startswith("Fem.") or stratify_group.lower() == "female":
                 color = '#B39DDB'
-            elif group.startswith("Male"):
+            elif group.startswith("Male") or stratify_group.lower() == "male":
                 color = '#20B2AA'
         else:
             color = 'green'
         kmf.plot_survival_function(color=color)
 
-    plt.title('Kaplan-Meier Survival Curve by Group')
+    if hti_colname:
+        plt.title(hti_colname, fontsize=12)
+    else:
+        plt.title('Kaplan-Meier Survival Curve by Group')
+    if stratify_group:
+        plt.suptitle(f"{stratify_group}")
+
     plt.xlabel('Time (Years)')
     plt.ylabel('Percent Survival')
     plt.legend()
@@ -184,7 +250,7 @@ def perform_logrank_test(data, time_col, event_col, group_col):
                                event_observed_A=group_data[0][event_col],
                                event_observed_B=group_data[2][event_col])
     # elif len(unique_groups) == 4:
-    #     # stratified by sex
+    #     # stratified by sex, in one plot
     #     groupA = pd.concat([group_data_point for group_data_point in group_data if ">" in group_data_point.values[1][
     #         -1]])
     #     groupB = pd.concat([group_data_point for group_data_point in group_data if "≤" in group_data_point.values[1][
@@ -231,19 +297,16 @@ def main(file_path, time_col, event_col, hi_file_path=None, hti_threshold=[0.5],
         if log_rank_results:
 
             # print(log_rank_results)
-            # alpha = 0.05
-            # if log_rank_results.p_value <= alpha:
-            #     print(f"p-value {log_rank_results.p_value} significant with significance level {alpha}")
-            # else:
-            #     print(f"p-value {log_rank_results.p_value} \033[1mnot\033[0m significant with significance level {alpha}.")
+            alpha = 0.05
+            if log_rank_results.p_value <= alpha:
+                print(f"p-value {log_rank_results.p_value} significant with significance level {alpha}")
+            else:
+                print(f"p-value {log_rank_results.p_value} \033[1mnot\033[0m significant with significance level {alpha}.")
 
             # Plot Kaplan-Meier curves
             group_sizes = km_data['HI Group'].value_counts().sort_index().tolist()
             plot_kaplan_meier(km_data, 'Overall Survival (Months)', 'Overall Survival Status',
                               'HI Group', log_rank_results.p_value, group_sizes, hti_threshold=hti_threshold)
-
-            # plot_kaplan_meier(km_data, 'Overall Survival (Months)', 'Overall Survival Status',
-            #               'HI Group', p_value=0.0001, group_sizes=group_sizes, hti_threshold=hti_threshold)
 
 
 if __name__ == "__main__":
@@ -269,8 +332,9 @@ if __name__ == "__main__":
                         help="Heterogeneity threshold value(s). Provide one value for binary split or two values for ternary split.")
     parser.add_argument("--stratify_by", type=str, nargs='+',
                         # default=None,
-                        default="Sex",
-                        # default="Age_3"
+                        # default="Sex",
+                        # default="Age",
+                        default="Age_3",
                         help="Subgroup feature to stratify by. Either \"Sex\" or \"Age_n\", where n is the number of "
                              "age bins (2 by default, split by median)")
     parser.add_argument("--split_mode", type=str, choices=['binary', 'ternary'],
