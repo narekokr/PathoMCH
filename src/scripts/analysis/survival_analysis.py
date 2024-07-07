@@ -259,6 +259,10 @@ def plot_kaplan_meier(data, time_col, event_col, group_col, p_value, group_sizes
 
     if outpath:
         filename = "_".join([hti_colname,stratify_group,"kaplan_meier.png"])
+        try :
+            filename = str(round(p_value, 2)) + '_' + filename
+        except:
+            pass
         filename = sanitize_filepath(filename)
         filepath = os.path.join(outpath, filename)
         plt.savefig(filepath)
@@ -378,8 +382,8 @@ if __name__ == "__main__":
                         help="Heterogeneity threshold value(s). Provide one value for binary split or two values for ternary split.")
     parser.add_argument("--stratify_by", type=str, nargs='+',
                         # default=None,
-                        default="Sex",
-                        # default="Age",
+                        # default="Sex",
+                        default="Age",
                         # default="Age_3",
                         help="Subgroup feature to stratify by. Either \"Sex\" or \"Age_n\", where n is the number of "
                              "age bins (2 by default, split by median)")
@@ -388,8 +392,8 @@ if __name__ == "__main__":
                         # default='ternary',
                         help="Choose 'binary' for two groups or 'ternary' for three groups based on HI thresholds.")
     parser.add_argument("--outpath", type=str,
-                        # default="../../../out/survival_analysis",
-                        default=None,
+                        default="../../../out/survival_analysis",
+                        # default=None,
                         help="Path to the output directory for plots.")
     args = parser.parse_args()
 
