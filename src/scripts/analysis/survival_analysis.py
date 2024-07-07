@@ -258,7 +258,7 @@ def plot_kaplan_meier(data, time_col, event_col, group_col, p_value, group_sizes
     plt.gca().text(0.05, 0.05, textstr, transform=plt.gca().transAxes, fontsize=9, verticalalignment='bottom')
 
     if outpath:
-        filename = "_".join([hti_colname,stratify_group,"kaplan_meier.png"])
+        filename = "_".join([hti_colname,stratify_group, str(hti_threshold), "kaplan_meier.png"])
         try :
             filename = str(round(p_value, 2)) + '_' + filename
         except:
@@ -377,13 +377,13 @@ if __name__ == "__main__":
                         default=None,
                         help="Path to a file containing the heterogeneity index list (one value per line).")
     parser.add_argument("--hti_threshold", type=float, nargs='+',
-                        # default=[0.5],
-                        default=[0.3, 0.7],
+                        default=[0.5],
+                        # default=[0.3, 0.7],
                         help="Heterogeneity threshold value(s). Provide one value for binary split or two values for ternary split.")
     parser.add_argument("--stratify_by", type=str, nargs='+',
-                        # default=None,
+                        default=None,
                         # default="Sex",
-                        default="Age",
+                        # default="Age",
                         # default="Age_3",
                         help="Subgroup feature to stratify by. Either \"Sex\" or \"Age_n\", where n is the number of "
                              "age bins (2 by default, split by median)")
